@@ -18,7 +18,7 @@
 ### 1. 克隆代码仓库
 
 ```bash
-git clone https://github.com/geonexus/geonexus-data-hub.git
+git clone https://github.com/mapcarto/geonexus-data-hub.git
 cd geonexus-data-hub
 ```
 （这一步将获取框架的所有源代码和配置文件，为后续启动做准备）

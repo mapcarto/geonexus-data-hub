@@ -89,7 +89,7 @@ class GeoNexusDTSModel {
 
 1. **请求接收**：Koop 核心接收到客户端请求，并调用 Provider 的 `getData` 方法
 2. **参数解析**：从请求中提取场景ID、空间范围、属性条件等参数
-3. **API请求构建**：根据参数构建对飞渡DTS API的请求
+3. **API请求构建**：根据参数构建对DTS API的请求
 4. **请求发送**：使用 node-fetch 发送HTTP请求到DTS API
 5. **响应处理**：接收API响应并进行初步验证
 6. **数据转换**：将DTS数据转换为标准GeoJSON格式

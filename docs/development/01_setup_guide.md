@@ -1,6 +1,6 @@
 # 开发环境搭建指南
 
-本文档将指导您如何搭建飞渡数据服务框架的开发环境，包括安装依赖、配置环境和启动服务。
+本文档将指导您如何搭建GeoNexus数据中台的开发环境，包括安装依赖、配置环境和启动服务。
 
 ## 前提条件
 
@@ -17,8 +17,8 @@
 首先，克隆项目代码库到本地：
 
 ```bash
-git clone https://github.com/feidu/data-framework.git
-cd feidu-data-framework
+git clone https://github.com/mapcarto/geonexus-data-hub.git
+cd geonexus-data-hub
 ```
 
 ## 配置环境变量
@@ -50,12 +50,12 @@ docker-compose up -d
 
 这将启动以下服务：
 
-- **feidu_gateway**: Nginx API 网关
-- **feidu_koop_server**: Koop 要素服务
-- **feidu_spatial_db**: PostGIS 空间数据库
-- **feidu_asset_db**: PostgreSQL 资产数据库
-- **feidu_dam_service**: 数字资产管理服务 (DAM)
-- **feidu_minio**: MinIO 对象存储
+- **geonexus_gateway**: Nginx API 网关
+- **geonexus_feature_engine**: GeoNexus 要素引擎
+- **geonexus_spatial_db**: PostGIS 空间数据库
+- **geonexus_asset_db**: PostgreSQL 资产数据库
+- **geonexus_asset_service**: GeoNexus 资产服务
+- **geonexus_minio**: MinIO 对象存储
 
 ## 验证服务状态
 
@@ -84,12 +84,12 @@ http://localhost/test-client/
 如果您需要在本地开发 Provider 或其他组件，请安装依赖：
 
 ```bash
-# 安装 Koop 服务器依赖
-cd apps/feidu-server
+# 安装要素引擎依赖
+cd apps/feature-engine
 npm install
 
 # 安装企业级 PostGIS Provider 依赖
-cd ../../packages/enterprise-postgis-provider
+cd ../../packages/provider-postgis-enterprise
 npm install
 ```
 
@@ -99,8 +99,8 @@ npm install
 
 1. 在 `packages/` 目录下创建新的 Provider 目录
 2. 实现 Provider 的核心功能
-3. 在 `apps/feidu-server/src/plugins.js` 中注册 Provider
-4. 重启 Koop 服务器以应用更改
+3. 在 `apps/feature-engine/src/plugins.js` 中注册 Provider
+4. 重启要素引擎以应用更改
 
 ### 热重载
 
@@ -110,8 +110,8 @@ npm install
 # 安装 nodemon
 npm install -g nodemon
 
-# 使用 nodemon 启动 Koop 服务器
-cd apps/feidu-server
+# 使用 nodemon 启动要素引擎
+cd apps/feature-engine
 nodemon start-koop.js
 ```
 
@@ -121,7 +121,7 @@ nodemon start-koop.js
 
 ```bash
 # 运行企业级 PostGIS Provider 的测试
-cd packages/enterprise-postgis-provider
+cd packages/provider-postgis-enterprise
 npm test
 ```
 
@@ -132,7 +132,7 @@ npm test
 如果遇到端口冲突，可以修改 `docker-compose.yml` 文件中的端口映射：
 
 ```yaml
-feidu_gateway:
+gateway:
   ports:
     - "8080:80"  # 将外部端口从 80 改为 8080
 ```
@@ -148,7 +148,7 @@ feidu_gateway:
 可以使用以下命令连接到数据库进行检查：
 
 ```bash
-docker exec -it feidu_spatial_db psql -U postgres -d spatial_db
+docker exec -it geonexus_spatial_db psql -U postgres -d spatial_db
 ```
 
 ### 日志查看
@@ -156,11 +156,11 @@ docker exec -it feidu_spatial_db psql -U postgres -d spatial_db
 查看服务日志：
 
 ```bash
-# 查看 Koop 服务器日志
-docker logs feidu_koop_server
+# 查看要素引擎日志
+docker logs geonexus_feature_engine
 
 # 查看 Nginx 网关日志
-docker logs feidu_gateway
+docker logs geonexus_gateway
 ```
 
 ## 下一步

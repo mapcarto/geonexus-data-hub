@@ -15,7 +15,7 @@ GeoNexus 数据中台是一个强大的地理空间数据集成平台，作为�
 
 1. 克隆仓库：
    ```bash
-   git clone https://github.com/feidu-tech/geonexus-data-hub.git
+   git clone https://github.com/mapcarto/geonexus-data-hub.git
    cd geonexus-data-hub
    ```
 
