@@ -20,6 +20,7 @@
 
 1. [环境搭建](./development/01_setup_guide.md) - 开发环境搭建指南
 2. [贡献指南](./development/02_contribution_guide.md) - 代码贡献指南
+3. [Koop Provider 开发规范与性能指南](./development/03_koop_provider_performance_guide.md) - Koop Provider 开发规范与性能指南
 
 ## 其他文档
 
