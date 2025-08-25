@@ -1,0 +1,134 @@
+services:
+  # 1. API 网关 (Nginx)
+  gateway:
+    image: nginx:1.21-alpine
+    container_name: geonexus_gateway
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./test-client:/usr/share/nginx/html/test-client
+    networks:
+      - geonexus-net
+    depends_on:
+      - feature_engine
+      - asset_service
+
+  # 2. GeoNexus 要素引擎
+  feature_engine:
+    container_name: geonexus_feature_engine
+    image: node:14  # 使用官方Node.js镜像
+    working_dir: /usr/src/app
+    command: >
+      sh -c "
+      mkdir -p /usr/src/app/node_modules &&
+      cd /usr/src/app &&
+      npm install --no-save express &&
+      PORT=7071 node express-server.js
+      "
+    environment:
+      - POSTGRES_HOST=spatial_db
+      - POSTGRES_USER=${SPATIAL_DB_USER}
+      - POSTGRES_PASSWORD=${SPATIAL_DB_PASSWORD}
+      - POSTGRES_DB=${SPATIAL_DB_NAME}
+      - NODE_ENV=development
+      - NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
+    volumes:
+      - ./apps/feature-engine:/usr/src/app
+      - ./packages:/usr/src/packages
+    ports:
+      - "7071:7071"  # 直接暴露要素引擎服务端口，便于调试
+    networks:
+      - geonexus-net
+    depends_on:
+      - spatial_db
+
+  # 3. GeoNexus 资产服务 (Directus)
+  asset_service:
+    image: directus/directus:9.0.0-rc.90
+    platform: linux/amd64
+    container_name: geonexus_asset_service
+    ports:
+      - "6062:8055" # 临时暴露Directus端口便于直接调试
+    environment:
+      - KEY=${DIRECTUS_SECRET_KEY}
+      - SECRET=${DIRECTUS_SECRET_KEY} # Older versions might use SECRET
+      - DB_CLIENT=pg
+      - DB_HOST=asset_db
+      - DB_PORT=5432
+      - DB_DATABASE=${ASSET_DB_NAME}
+      - DB_USER=${ASSET_DB_USER}
+      - DB_PASSWORD=${ASSET_DB_PASSWORD}
+      - ADMIN_EMAIL=${DIRECTUS_ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${DIRECTUS_ADMIN_PASSWORD}
+      - STORAGE_LOCATIONS=minio
+      - STORAGE_MINIO_DRIVER=s3
+      - STORAGE_MINIO_ENDPOINT=http://minio:9000
+      - STORAGE_MINIO_BUCKET=directus-assets
+      - STORAGE_MINIO_KEY=${MINIO_ROOT_USER}
+      - STORAGE_MINIO_SECRET=${MINIO_ROOT_PASSWORD}
+      - STORAGE_MINIO_PORT=9000
+      - STORAGE_MINIO_USE_SSL=false
+    networks:
+      - geonexus-net
+    depends_on:
+      - asset_db
+      - minio
+
+  # 4. 空间数据库 (PostGIS for 要素引擎)
+  spatial_db:
+    image: postgis/postgis:12-3.0
+    platform: linux/amd64
+    container_name: geonexus_spatial_db
+    environment:
+      - POSTGRES_USER=${SPATIAL_DB_USER}
+      - POSTGRES_PASSWORD=${SPATIAL_DB_PASSWORD}
+      - POSTGRES_DB=${SPATIAL_DB_NAME}
+    volumes:
+      - spatial_db_data:/var/lib/postgresql/data
+      - ./db/spatial-db/init:/docker-entrypoint-initdb.d
+    networks:
+      - geonexus-net
+
+  # 5. 资产数据库 (PostgreSQL for 资产服务)
+  asset_db:
+    image: postgres:12-alpine
+    platform: linux/amd64
+    container_name: geonexus_asset_db
+    environment:
+      - POSTGRES_USER=${ASSET_DB_USER}
+      - POSTGRES_PASSWORD=${ASSET_DB_PASSWORD}
+      - POSTGRES_DB=${ASSET_DB_NAME}
+    volumes:
+      - asset_db_data:/var/lib/postgresql/data
+      - ./db/asset-db/init:/docker-entrypoint-initdb.d
+    networks:
+      - geonexus-net
+
+  # 6. 对象存储 (MinIO for 资产服务)
+  minio:
+    image: minio/minio:RELEASE.2022-10-29T06-21-33Z
+    platform: linux/amd64
+    container_name: geonexus_minio
+    command: server /data
+    ports:
+      - "9090:9000" # S3 API Port
+      - "9091:9001" # MinIO Console Port
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_BROWSER_REDIRECT_URL=http://localhost:9091
+      - MINIO_SERVER_URL=http://localhost:9090
+    volumes:
+      - minio_data:/data
+    networks:
+      - geonexus-net
+
+volumes:
+  spatial_db_data:
+  asset_db_data:
+  minio_data:
+
+networks:
+  geonexus-net:
+    driver: bridge

@@ -1,0 +1,33 @@
+{
+  "name": "provider-dts",
+  "version": "1.0.0",
+  "description": "GeoNexus DTS数据提供者，用于连接数字孪生数据源并提供标准化的空间数据服务",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "mocha 'test/**/*.test.js'",
+    "start": "koop serve",
+    "lint": "eslint src/**/*.js"
+  },
+  "dependencies": {
+    "config": "^3.3.9",
+    "node-fetch": "^2.6.7"
+  },
+  "devDependencies": {
+    "@koopjs/cli": "^1.1.7",
+    "chai": "^4.3.7",
+    "eslint": "^8.52.0",
+    "mocha": "^10.2.0"
+  },
+  "repository": "",
+  "keywords": [
+    "koop",
+    "plugin",
+    "provider",
+    "feidu",
+    "dts",
+    "3dt",
+    "geospatial"
+  ],
+  "author": "GeoNexus",
+  "license": "ISC"
+}

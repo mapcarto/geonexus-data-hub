@@ -1,0 +1,32 @@
+{
+  "name": "provider-postgis-enterprise",
+  "version": "1.0.0",
+  "description": "GeoNexus 要素引擎企业级 PostGIS 数据提供者，基于官方 @koopjs/provider-postgis 的增强版本",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha 'test/**/*.test.js'",
+    "lint": "eslint *.js"
+  },
+  "keywords": [
+    "koop",
+    "provider",
+    "postgis",
+    "feidu",
+    "geospatial",
+    "enterprise"
+  ],
+  "author": "GeoNexus",
+  "license": "ISC",
+  "dependencies": {
+    "@koopjs/provider-postgis": "^2.0.0",
+    "config": "^3.3.9"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "eslint": "^8.52.0",
+    "mocha": "^10.2.0"
+  },
+  "peerDependencies": {
+    "@koopjs/koop-core": "^8.0.0"
+  }
+}

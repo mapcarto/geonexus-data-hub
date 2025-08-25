@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoNexus 数据中台 - 测试客户端</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #1a73e8;
+            margin-top: 0;
+        }
+        
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            color: #1a73e8;
+        }
+        
+        .card p {
+            color: #666;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #1a73e8;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #1557b0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GeoNexus 数据中台 - 测试客户端</h1>
+        
+        <div class="card">
+            <h2>2D 地图测试</h2>
+            <p>使用 Leaflet 进行基础的二维地图测试，查看数据在平面地图上的展示效果。</p>
+            <a href="leaflet.html" class="btn">打开 2D 测试</a>
+        </div>
+        
+        <div class="card">
+            <h2>3D 地球测试</h2>
+            <p>使用 CesiumJS 进行三维地球测试，体验数据在真实三维环境中的展示效果。</p>
+            <a href="cesium.html" class="btn">打开 3D 测试</a>
+        </div>
+        
+        <div class="card">
+            <h2>GeoNexus SDK测试</h2>
+            <p>使用GeoNexus前端SDK进行数据服务测试，体验GeoNexus SDK的强大功能和便捷性。</p>
+            <a href="geonexus-sdk-test.html" class="btn">打开SDK测试</a>
+        </div>
+    </div>
+</body>
+</html>

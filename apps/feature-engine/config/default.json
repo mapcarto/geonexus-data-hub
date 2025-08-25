@@ -1,0 +1,28 @@
+{
+  "port": 8080,
+  "provider-postgis-enterprise": {
+    "connection": "postgresql://koop:your_strong_password@spatial_db:5432/spatial_db",
+    "geometryField": "geom",
+    "idField": "id",
+    "allowedTables": [
+      "public.business_features",
+      "public.buildings",
+      "public.pois",
+      "public.roads",
+      "public.land_parcels"
+    ],
+    "defaultTable": "public.business_features",
+    "maxRecords": 10000,
+    "logLevel": "info",
+    "enableAudit": true,
+    "auditTable": "public.data_access_logs"
+  },
+  "provider-dts": {
+    "apiUrl": "https://api.geonexus.com/dts",
+    "apiKey": "${DTS_API_KEY}",
+    "timeout": 30000,
+    "maxRecords": 5000,
+    "defaultSceneId": "default",
+    "logLevel": "info"
+  }
+}

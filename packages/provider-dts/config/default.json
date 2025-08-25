@@ -1,0 +1,10 @@
+{
+  "provider-dts": {
+    "apiUrl": "https://api.geonexus.com/dts",
+    "apiKey": "${DTS_API_KEY}",
+    "defaultSceneId": "default",
+    "timeout": 30000,
+    "maxRecords": 5000,
+    "logLevel": "info"
+  }
+}

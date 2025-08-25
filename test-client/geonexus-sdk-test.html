@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoNexus SDK - 数据中台测试</title>
+    <!-- 引入 Leaflet CSS 和 JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- 引入 Element Plus 样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.3.8/dist/index.css" />
+    <!-- 引入 Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.js"></script>
+    <!-- 引入 Element Plus -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.3.8/dist/index.full.js"></script>
+    <!-- 引入 axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js"></script>
+    <!-- 自定义样式 -->
+    <style>
+        :root {
+            --primary-color: #1890ff;
+            --success-color: #52c41a;
+            --warning-color: #faad14;
+            --danger-color: #f5222d;
+            --text-color: #333333;
+            --border-color: #e8e8e8;
+            --bg-color: #f5f5f5;
+            --header-height: 64px;
+            --sidebar-width: 280px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        .header {
+            height: var(--header-height);
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .logo img {
+            height: 36px;
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #fff;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .result-panel {
+            height: 300px;
+            background-color: #fff;
+            border-top: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        .form-section {
+            margin-bottom: 20px;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .form-item {
+            margin-bottom: 15px;
+        }
+        
+        .form-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .el-tabs__nav {
+            background-color: #fff;
+        }
+        
+        .el-tabs__item.is-active {
+            color: var(--primary-color);
+        }
+        
+        .el-tabs__active-bar {
+            background-color: var(--primary-color);
+        }
+        
+        .el-button--primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .el-button--primary:hover, .el-button--primary:focus {
+            background-color: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .el-button--success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+        
+        .el-button--success:hover, .el-button--success:focus {
+            background-color: #73d13d;
+            border-color: #73d13d;
+        }
+        
+        .feature-popup {
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .feature-popup h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .feature-popup table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .feature-popup th, .feature-popup td {
+            padding: 5px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+        
+        .feature-popup th {
+            font-weight: bold;
+            width: 40%;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .code-block {
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        
+        .status-bar {
+            height: 30px;
+            background-color: #fff;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .status-item {
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-item .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-success .dot {
+            background-color: var(--success-color);
+        }
+        
+        .status-error .dot {
+            background-color: var(--danger-color);
+        }
+        
+        .status-warning .dot {
+            background-color: var(--warning-color);
+        }
+        
+        .status-info .dot {
+            background-color: var(--primary-color);
+        }
+        
+        .asset-card {
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .asset-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        
+        .asset-card .asset-info {
+            padding: 10px;
+        }
+        
+        .asset-card h4 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
+        
+        .asset-card p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app-container">
+        <div class="header">
+            <div class="logo">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTg5MGZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci1nbG9iZSI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxsaW5lIHgxPSIyIiB5MT0iMTIiIHgyPSIyMiIgeTI9IjEyIj48L2xpbmU+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+" alt="GeoNexus Logo">
+                <span>GeoNexus SDK测试平台</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <el-tabs v-model="activeTab">
+                    <el-tab-pane label="GeoNexus DTS数据" name="dts">
+                        <div class="form-section">
+                            <h3>数据查询参数</h3>
+                            <div class="form-item">
+                                <label>场景ID</label>
+                                <el-select v-model="dtsForm.sceneId" placeholder="请选择场景" style="width: 100%">
+                                    <el-option label="建筑" value="buildings"></el-option>
+                                    <el-option label="兴趣点" value="pois"></el-option>
+                                    <el-option label="默认场景" value="default"></el-option>
+                                </el-select>
+                            </div>
+                            <div class="form-item">
+                                <label>空间范围 (bbox)</label>
+                                <el-input v-model="dtsForm.bbox" placeholder="例如: 116.3,39.8,116.5,40.0"></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>属性过滤 (where)</label>
+                                <el-input v-model="dtsForm.where" placeholder="例如: status='active'"></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>返回字段</label>
+                                <el-input v-model="dtsForm.outFields" placeholder="例如: name,height,status 或 *"></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>最大记录数</label>
+                                <el-input-number v-model="dtsForm.limit" :min="1" :max="1000" style="width: 100%"></el-input-number>
+                            </div>
+                            <div class="form-actions">
+                                <el-button type="primary" @click="queryDTSData">查询数据</el-button>
+                                <el-button @click="clearData">清除数据</el-button>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                    
+                    <el-tab-pane label="企业级PostGIS" name="postgis">
+                        <div class="form-section">
+                            <h3>数据查询参数</h3>
+                            <div class="form-item">
+                                <label>表名</label>
+                                <el-select v-model="postgisForm.tableName" placeholder="请选择表" style="width: 100%">
+                                    <el-option label="业务要素" value="public.business_features"></el-option>
+                                    <el-option label="建筑" value="public.buildings"></el-option>
+                                    <el-option label="兴趣点" value="public.pois"></el-option>
+                                </el-select>
+                            </div>
+                            <div class="form-item">
+                                <label>空间范围 (geometry)</label>
+                                <el-input v-model="postgisForm.geometry" placeholder='例如: {"xmin":116.3,"ymin":39.8,"xmax":116.5,"ymax":40.0}'></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>属性过滤 (where)</label>
+                                <el-input v-model="postgisForm.where" placeholder="例如: status='active'"></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>返回字段</label>
+                                <el-input v-model="postgisForm.outFields" placeholder="例如: name,height,status 或 *"></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>最大记录数</label>
+                                <el-input-number v-model="postgisForm.resultRecordCount" :min="1" :max="1000" style="width: 100%"></el-input-number>
+                            </div>
+                            <div class="form-actions">
+                                <el-button type="primary" @click="queryPostGISData">查询数据</el-button>
+                                <el-button @click="clearData">清除数据</el-button>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                    
+                    <el-tab-pane label="GeoNexus 资产服务" name="dam">
+                        <div class="form-section">
+                            <h3>资产查询参数</h3>
+                            <div class="form-item">
+                                <label>过滤条件</label>
+                                <el-input v-model="damForm.filter" type="textarea" :rows="3" placeholder='例如: {"type":{"_eq":"image"}}'></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>排序字段</label>
+                                <el-input v-model="damForm.sort" placeholder="例如: -date_created"></el-input>
+                            </div>
+                            <div class="form-item">
+                                <label>最大记录数</label>
+                                <el-input-number v-model="damForm.limit" :min="1" :max="100" style="width: 100%"></el-input-number>
+                            </div>
+                            <div class="form-actions">
+                                <el-button type="primary" @click="queryDAMAssets">查询资产</el-button>
+                                <el-button @click="clearAssets">清除结果</el-button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section" v-if="assets.length > 0">
+                            <h3>资产列表</h3>
+                            <div class="asset-card" v-for="asset in assets" :key="asset.id">
+                                <img v-if="asset.type === 'image'" :src="getAssetUrl(asset)" alt="资产图片">
+                                <div class="asset-info">
+                                    <h4>{{ asset.title || '未命名资产' }}</h4>
+                                    <p>类型: {{ asset.type || '未知' }}</p>
+                                    <p>ID: {{ asset.id }}</p>
+                                    <el-button size="small" type="primary" @click="viewAssetDetails(asset)">查看详情</el-button>
+                                </div>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
+            </div>
+            
+            <div class="content">
+                <div class="map-container">
+                    <div id="map"></div>
+                    <div class="loading-overlay" v-if="loading">
+                        <el-loading></el-loading>
+                    </div>
+                </div>
+                
+                <div class="result-panel">
+                    <div v-if="resultData">
+                        <div class="code-block">
+                            <pre>{{ JSON.stringify(resultData, null, 2) }}</pre>
+                        </div>
+                    </div>
+                    <div v-else>
+                        <p>尚未执行查询或查询结果为空</p>
+                    </div>
+                </div>
+                
+                <div class="status-bar">
+                    <div class="status-item" :class="connectionStatus.class">
+                        <div class="dot"></div>
+                        <span>{{ connectionStatus.text }}</span>
+                    </div>
+                    <div class="status-item status-info">
+                        <span>查询时间: {{ queryTime }}ms</span>
+                    </div>
+                    <div class="status-item status-info" v-if="featureCount !== null">
+                        <span>要素数量: {{ featureCount }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 资产详情对话框 -->
+        <el-dialog v-model="assetDialogVisible" title="资产详情" width="600px">
+            <div v-if="selectedAsset">
+                <div v-if="selectedAsset.type === 'image'" style="text-align: center; margin-bottom: 20px;">
+                    <img :src="getAssetUrl(selectedAsset)" alt="资产图片" style="max-width: 100%; max-height: 300px;">
+                </div>
+                
+                <el-descriptions :column="1" border>
+                    <el-descriptions-item label="ID">{{ selectedAsset.id }}</el-descriptions-item>
+                    <el-descriptions-item label="标题">{{ selectedAsset.title || '未命名' }}</el-descriptions-item>
+                    <el-descriptions-item label="类型">{{ selectedAsset.type || '未知' }}</el-descriptions-item>
+                    <el-descriptions-item label="描述">{{ selectedAsset.description || '无描述' }}</el-descriptions-item>
+                    <el-descriptions-item label="创建时间">{{ selectedAsset.date_created || '未知' }}</el-descriptions-item>
+                    <el-descriptions-item label="创建者">{{ selectedAsset.user_created || '未知' }}</el-descriptions-item>
+                </el-descriptions>
+                
+                <div v-if="selectedAsset.file" style="margin-top: 20px;">
+                    <h4>文件信息</h4>
+                    <el-descriptions :column="1" border>
+                        <el-descriptions-item label="文件ID">{{ selectedAsset.file.id }}</el-descriptions-item>
+                        <el-descriptions-item label="存储位置">{{ selectedAsset.file.storage }}</el-descriptions-item>
+                        <el-descriptions-item label="文件名">{{ selectedAsset.file.filename_download }}</el-descriptions-item>
+                        <el-descriptions-item label="文件类型">{{ selectedAsset.file.type }}</el-descriptions-item>
+                        <el-descriptions-item label="文件大小">{{ formatFileSize(selectedAsset.file.filesize) }}</el-descriptions-item>
+                    </el-descriptions>
+                </div>
+            </div>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="assetDialogVisible = false">关闭</el-button>
+                    <el-button type="primary" @click="downloadAsset" v-if="selectedAsset && selectedAsset.file">
+                        下载文件
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
+    </div>
+    
+    <script>
+    // GeoNexus SDK实现
+    class GeoNexusSDK {
+        constructor(options = {}) {
+            this.baseUrl = options.baseUrl || '';
+            this.apiKey = options.apiKey || '';
+            console.log('GeoNexus SDK初始化成功');
+        }
+            
+            // DTS数据服务
+            async queryDTSFeatures(sceneId, params = {}) {
+                try {
+                    const queryParams = new URLSearchParams({
+                        f: 'geojson',
+                        ...params
+                    });
+                    
+                const url = `${this.baseUrl}/provider-dts/${sceneId}/FeatureServer/0/query?${queryParams}`;
+                console.log(`查询DTS数据: ${url}`);
+                    
+                    const startTime = Date.now();
+                    const response = await axios.get(url);
+                    const endTime = Date.now();
+                    
+                    return {
+                        data: response.data,
+                        queryTime: endTime - startTime
+                    };
+                } catch (error) {
+                    console.error('查询DTS数据失败:', error);
+                    throw error;
+                }
+            }
+            
+            // 企业级PostGIS数据服务
+            async queryPostGISFeatures(tableName, params = {}) {
+                try {
+                    const queryParams = new URLSearchParams({
+                        f: 'geojson',
+                        ...params
+                    });
+                    
+                    const url = `${this.baseUrl}/enterprise-postgis/${tableName}/FeatureServer/0/query?${queryParams}`;
+                    console.log(`查询PostGIS数据: ${url}`);
+                    
+                    const startTime = Date.now();
+                    const response = await axios.get(url);
+                    const endTime = Date.now();
+                    
+                    return {
+                        data: response.data,
+                        queryTime: endTime - startTime
+                    };
+                } catch (error) {
+                    console.error('查询PostGIS数据失败:', error);
+                    throw error;
+                }
+            }
+            
+            // 数字资产管理服务
+            async queryDAMAssets(params = {}) {
+                try {
+                    // 将filter参数从字符串转换为JSON对象
+                    if (params.filter && typeof params.filter === 'string') {
+                        try {
+                            params.filter = JSON.parse(params.filter);
+                        } catch (e) {
+                            console.warn('过滤条件解析失败，将使用原始字符串');
+                        }
+                    }
+                    
+                    const url = `${this.baseUrl}/dam/items`;
+                    console.log(`查询DAM资产: ${url}`, params);
+                    
+                    const startTime = Date.now();
+                    const response = await axios.get(url, { params });
+                    const endTime = Date.now();
+                    
+                    return {
+                        data: response.data,
+                        queryTime: endTime - startTime
+                    };
+                } catch (error) {
+                    console.error('查询DAM资产失败:', error);
+                    throw error;
+                }
+            }
+            
+            // 获取资产详情
+            async getDAMAsset(id) {
+                try {
+                    const url = `${this.baseUrl}/dam/items/${id}`;
+                    console.log(`获取资产详情: ${url}`);
+                    
+                    const response = await axios.get(url);
+                    return response.data;
+                } catch (error) {
+                    console.error('获取资产详情失败:', error);
+                    throw error;
+                }
+            }
+            
+            // 获取资产文件URL
+            getDAMAssetFileUrl(fileId) {
+                return `${this.baseUrl}/dam/assets/${fileId}`;
+            }
+        }
+        
+        // Vue应用
+        const { createApp, ref, reactive, onMounted, watch } = Vue;
+        
+        const app = createApp({
+            setup() {
+                // 状态变量
+                const activeTab = ref('dts');
+                const map = ref(null);
+                const featureLayer = ref(null);
+                const loading = ref(false);
+                const resultData = ref(null);
+                const connectionStatus = reactive({
+                    class: 'status-info',
+                    text: '就绪'
+                });
+                const queryTime = ref(0);
+                const featureCount = ref(null);
+                const assets = ref([]);
+                const selectedAsset = ref(null);
+                const assetDialogVisible = ref(false);
+                
+                // 表单数据
+                const dtsForm = reactive({
+                    sceneId: 'buildings',
+                    bbox: '116.3,39.8,116.5,40.0',
+                    where: "status='active'",
+                    outFields: '*',
+                    limit: 100
+                });
+                
+                const postgisForm = reactive({
+                    tableName: 'public.buildings',
+                    geometry: '{"xmin":116.3,"ymin":39.8,"xmax":116.5,"ymax":40.0}',
+                    geometryType: 'esriGeometryEnvelope',
+                    spatialRel: 'esriSpatialRelIntersects',
+                    where: "status='active'",
+                    outFields: '*',
+                    resultRecordCount: 100
+                });
+                
+                const damForm = reactive({
+                    filter: '{"type":{"_eq":"image"}}',
+                    sort: '-date_created',
+                    limit: 10
+                });
+                
+                // 初始化GeoNexus SDK
+                const geonexus = new GeoNexusSDK({
+                    baseUrl: ''  // 使用相对路径
+                });
+                
+                // 初始化地图
+                onMounted(() => {
+                    map.value = L.map('map').setView([39.9, 116.4], 12);
+                    
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map.value);
+                    
+                    // 测试连接状态
+                    testConnection();
+                });
+                
+                // 测试连接状态
+                const testConnection = async () => {
+                    try {
+                        const response = await axios.get('/health');
+                        if (response.status === 200) {
+                            connectionStatus.class = 'status-success';
+                            connectionStatus.text = '已连接';
+                        } else {
+                            connectionStatus.class = 'status-warning';
+                            connectionStatus.text = '连接异常';
+                        }
+                    } catch (error) {
+                        connectionStatus.class = 'status-warning';
+                        connectionStatus.text = '连接异常 (健康检查端点未响应)';
+                    }
+                };
+                
+                // 查询飞渡DTS数据
+                const queryDTSData = async () => {
+                    try {
+                        loading.value = true;
+                        clearData();
+                        
+                        const params = {
+                            bbox: dtsForm.bbox,
+                            where: dtsForm.where,
+                            outFields: dtsForm.outFields,
+                            limit: dtsForm.limit
+                        };
+                        
+                        const result = await geonexus.queryDTSFeatures(dtsForm.sceneId, params);
+                        
+                        resultData.value = result.data;
+                        queryTime.value = result.queryTime;
+                        featureCount.value = result.data.features ? result.data.features.length : 0;
+                        
+                        // 在地图上显示数据
+                        displayGeoJSON(result.data);
+                        
+                        connectionStatus.class = 'status-success';
+                        connectionStatus.text = '查询成功';
+                    } catch (error) {
+                        console.error('查询DTS数据失败:', error);
+                        resultData.value = { error: error.message };
+                        connectionStatus.class = 'status-error';
+                        connectionStatus.text = '查询失败';
+                        
+                        ElMessage.error(`查询失败: ${error.message}`);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+                
+                // 查询企业级PostGIS数据
+                const queryPostGISData = async () => {
+                    try {
+                        loading.value = true;
+                        clearData();
+                        
+                        const params = {
+                            geometry: postgisForm.geometry,
+                            geometryType: postgisForm.geometryType,
+                            spatialRel: postgisForm.spatialRel,
+                            where: postgisForm.where,
+                            outFields: postgisForm.outFields,
+                            resultRecordCount: postgisForm.resultRecordCount
+                        };
+                        
+                        const result = await geonexus.queryPostGISFeatures(postgisForm.tableName, params);
+                        
+                        resultData.value = result.data;
+                        queryTime.value = result.queryTime;
+                        featureCount.value = result.data.features ? result.data.features.length : 0;
+                        
+                        // 在地图上显示数据
+                        displayGeoJSON(result.data);
+                        
+                        connectionStatus.class = 'status-success';
+                        connectionStatus.text = '查询成功';
+                    } catch (error) {
+                        console.error('查询PostGIS数据失败:', error);
+                        resultData.value = { error: error.message };
+                        connectionStatus.class = 'status-error';
+                        connectionStatus.text = '查询失败';
+                        
+                        ElMessage.error(`查询失败: ${error.message}`);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+                
+                // 查询数字资产管理数据
+                const queryDAMAssets = async () => {
+                    try {
+                        loading.value = true;
+                        assets.value = [];
+                        
+                        let filterObj = {};
+                        if (damForm.filter) {
+                            try {
+                                filterObj = JSON.parse(damForm.filter);
+                            } catch (e) {
+                                console.warn('过滤条件解析失败，将使用空过滤器');
+                            }
+                        }
+                        
+                        const params = {
+                            filter: filterObj,
+                            sort: damForm.sort,
+                            limit: damForm.limit
+                        };
+                        
+                        const result = await geonexus.queryDAMAssets(params);
+                        
+                        resultData.value = result.data;
+                        queryTime.value = result.queryTime;
+                        
+                        if (result.data && result.data.data) {
+                            assets.value = result.data.data;
+                            featureCount.value = assets.value.length;
+                        }
+                        
+                        connectionStatus.class = 'status-success';
+                        connectionStatus.text = '查询成功';
+                    } catch (error) {
+                        console.error('查询DAM资产失败:', error);
+                        resultData.value = { error: error.message };
+                        connectionStatus.class = 'status-error';
+                        connectionStatus.text = '查询失败';
+                        
+                        ElMessage.error(`查询失败: ${error.message}`);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+                
+                // 在地图上显示GeoJSON数据
+                const displayGeoJSON = (geojson) => {
+                    if (!geojson || !geojson.features || !map.value) return;
+                    
+                    // 清除之前的图层
+                    if (featureLayer.value) {
+                        map.value.removeLayer(featureLayer.value);
+                    }
+                    
+                    // 创建新的GeoJSON图层
+                    featureLayer.value = L.geoJSON(geojson, {
+                        style: function(feature) {
+                            return {
+                                color: '#1890ff',
+                                weight: 2,
+                                opacity: 1,
+                                fillColor: '#1890ff',
+                                fillOpacity: 0.3
+                            };
+                        },
+                        pointToLayer: function(feature, latlng) {
+                            return L.circleMarker(latlng, {
+                                radius: 8,
+                                fillColor: '#1890ff',
+                                color: '#096dd9',
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            });
+                        },
+                        onEachFeature: function(feature, layer) {
+                            // 为每个要素添加点击事件
+                            layer.on('click', function(e) {
+                                displayFeatureInfo(feature, e.latlng);
+                            });
+                        }
+                    }).addTo(map.value);
+                    
+                    // 自动缩放到数据显示范围
+                    if (featureLayer.value.getBounds().isValid()) {
+                        map.value.fitBounds(featureLayer.value.getBounds());
+                    }
+                };
+                
+                // 显示要素信息
+                const displayFeatureInfo = (feature, latlng) => {
+                    if (!feature || !feature.properties) return;
+                    
+                    // 构建HTML表格显示属性
+                    let tableHtml = '<table class="feature-popup-table">';
+                    
+                    // 添加ID
+                    if (feature.id) {
+                        tableHtml += `<tr><th>ID</th><td>${feature.id}</td></tr>`;
+                    }
+                    
+                    // 遍历所有属性
+                    for (const key in feature.properties) {
+                        if (feature.properties.hasOwnProperty(key)) {
+                            const value = feature.properties[key];
+                            tableHtml += `<tr><th>${key}</th><td>${value}</td></tr>`;
+                        }
+                    }
+                    
+                    tableHtml += '</table>';
+                    
+                    // 创建弹出窗口
+                    const popup = L.popup()
+                        .setLatLng(latlng)
+                        .setContent(`<div class="feature-popup"><h3>要素信息</h3>${tableHtml}</div>`)
+                        .openOn(map.value);
+                };
+                
+                // 清除数据
+                const clearData = () => {
+                    if (featureLayer.value && map.value) {
+                        map.value.removeLayer(featureLayer.value);
+                        featureLayer.value = null;
+                    }
+                    
+                    resultData.value = null;
+                    featureCount.value = null;
+                    queryTime.value = 0;
+                };
+                
+                // 清除资产
+                const clearAssets = () => {
+                    assets.value = [];
+                    resultData.value = null;
+                    featureCount.value = null;
+                    queryTime.value = 0;
+                };
+                
+                // 查看资产详情
+                const viewAssetDetails = (asset) => {
+                    selectedAsset.value = asset;
+                    assetDialogVisible.value = true;
+                };
+                
+                // 获取资产URL
+                const getAssetUrl = (asset) => {
+                    if (asset && asset.file && asset.file.id) {
+                        return geonexus.getDAMAssetFileUrl(asset.file.id);
+                    }
+                    return 'https://via.placeholder.com/300x200?text=无图片';
+                };
+                
+                // 下载资产
+                const downloadAsset = () => {
+                    if (selectedAsset.value && selectedAsset.value.file) {
+                        const url = getAssetUrl(selectedAsset.value);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = selectedAsset.value.file.filename_download || 'asset';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                };
+                
+                // 格式化文件大小
+                const formatFileSize = (bytes) => {
+                    if (!bytes || isNaN(bytes)) return '未知';
+                    
+                    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+                    let size = bytes;
+                    let unitIndex = 0;
+                    
+                    while (size >= 1024 && unitIndex < units.length - 1) {
+                        size /= 1024;
+                        unitIndex++;
+                    }
+                    
+                    return `${size.toFixed(2)} ${units[unitIndex]}`;
+                };
+                
+                // 监听标签页切换
+                watch(activeTab, (newTab) => {
+                    // 当切换标签页时，调整地图大小
+                    if (map.value) {
+                        setTimeout(() => {
+                            map.value.invalidateSize();
+                        }, 100);
+                    }
+                });
+                
+                return {
+                    activeTab,
+                    loading,
+                    resultData,
+                    connectionStatus,
+                    queryTime,
+                    featureCount,
+                    dtsForm,
+                    postgisForm,
+                    damForm,
+                    assets,
+                    selectedAsset,
+                    assetDialogVisible,
+                    queryDTSData,
+                    queryPostGISData,
+                    queryDAMAssets,
+                    clearData,
+                    clearAssets,
+                    viewAssetDetails,
+                    getAssetUrl,
+                    downloadAsset,
+                    formatFileSize
+                };
+            }
+        });
+        
+        // 挂载Vue应用
+        app.use(ElementPlus);
+        app.mount('#app');
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "enterprise-postgis",
+  "type": "provider",
+  "version": "1.0.0",
+  "allowedParams": {
+    "host": true,
+    "id": true
+  }
+}

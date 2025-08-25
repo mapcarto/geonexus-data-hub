@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞渡数据服务框架 - Leaflet 2D 测试客户端</title>
+    <!-- 引入 Leaflet CSS 和 JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- 自定义样式 -->
+    <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .control-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+        }
+        
+        .control-panel h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+        
+        .control-panel select, .control-panel button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        .control-panel button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .control-panel button:hover {
+            background-color: #1557b0;
+        }
+        
+        .info-panel {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .info-panel h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+        
+        .info-panel table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .info-panel th, .info-panel td {
+            padding: 5px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .info-panel th {
+            font-weight: bold;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 18px;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 地图容器 -->
+    <div id="map"></div>
+    
+    <!-- 控制面板 -->
+    <div class="control-panel">
+        <h3>飞渡数据服务</h3>
+        <select id="dataSourceSelect">
+            <option value="">-- 选择数据源 --</option>
+            <optgroup label="企业级 PostGIS Provider">
+                <option value="/enterprise-postgis/public.business_features">业务要素</option>
+                <option value="/enterprise-postgis/public.buildings">建筑</option>
+                <option value="/enterprise-postgis/public.pois">兴趣点</option>
+            </optgroup>
+            <optgroup label="飞渡 DTS Provider">
+                <option value="/feidu-dts/buildings">建筑</option>
+                <option value="/feidu-dts/pois">兴趣点</option>
+                <option value="/feidu-dts/default">默认场景</option>
+            </optgroup>
+        </select>
+        <button id="loadDataBtn">加载数据</button>
+        <button id="clearDataBtn">清除数据</button>
+    </div>
+    
+    <!-- 加载提示 -->
+    <div class="loading" id="loadingIndicator">数据加载中...</div>
+    
+    <!-- 脚本 -->
+    <script>
+        // 初始化地图
+        const map = L.map('map').setView([39.9, 116.4], 10);
+        
+        // 添加底图
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // 获取DOM元素
+        const dataSourceSelect = document.getElementById('dataSourceSelect');
+        const loadDataBtn = document.getElementById('loadDataBtn');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        
+        // 当前加载的数据图层
+        let currentLayer = null;
+        
+        // 加载数据按钮点击事件
+        loadDataBtn.addEventListener('click', async () => {
+            const serviceUrl = dataSourceSelect.value;
+            
+            if (!serviceUrl) {
+                alert('请选择一个数据源');
+                return;
+            }
+            
+            // 清除之前的数据
+            clearData();
+            
+            // 显示加载指示器
+            loadingIndicator.style.display = 'block';
+            
+            try {
+                await loadDataFromKoop(serviceUrl);
+            } finally {
+                // 隐藏加载指示器
+                loadingIndicator.style.display = 'none';
+            }
+        });
+        
+        // 清除数据按钮点击事件
+        clearDataBtn.addEventListener('click', () => {
+            clearData();
+        });
+        
+        // 从Koop加载数据
+        async function loadDataFromKoop(serviceUrl) {
+            try {
+                // 构建查询URL，请求GeoJSON格式
+                const queryUrl = `${serviceUrl}/FeatureServer/0/query?f=geojson&where=1=1&outFields=*`;
+                
+                console.log('正在请求数据:', queryUrl);
+                
+                const response = await fetch(queryUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误 ${response.status}: ${await response.text()}`);
+                }
+                
+                const geojsonData = await response.json();
+                
+                console.log('数据加载成功:', geojsonData);
+                
+                if (!geojsonData.features || geojsonData.features.length === 0) {
+                    alert('没有找到任何要素');
+                    return;
+                }
+                
+                // 使用Leaflet加载GeoJSON数据
+                currentLayer = L.geoJSON(geojsonData, {
+                    style: function(feature) {
+                        return {
+                            color: '#ff4081',
+                            weight: 2,
+                            opacity: 1,
+                            fillColor: '#ff80ab',
+                            fillOpacity: 0.5
+                        };
+                    },
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: '#ff4081',
+                            color: '#c60055',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // 为每个要素添加点击事件
+                        layer.on('click', function(e) {
+                            displayFeatureInfo(feature, e.latlng);
+                        });
+                    }
+                }).addTo(map);
+                
+                // 自动缩放到数据显示范围
+                map.fitBounds(currentLayer.getBounds());
+                
+                console.log('数据渲染完成');
+            } catch (error) {
+                console.error('从Koop加载数据失败:', error);
+                alert(`加载数据失败: ${error.message}`);
+            }
+        }
+        
+        // 清除数据
+        function clearData() {
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+                currentLayer = null;
+            }
+            
+            // 关闭所有弹出窗口
+            map.closePopup();
+        }
+        
+        // 显示要素信息
+        function displayFeatureInfo(feature, latlng) {
+            if (!feature || !feature.properties) {
+                return;
+            }
+            
+            // 构建HTML表格显示属性
+            let tableHtml = '<table>';
+            
+            // 遍历所有属性
+            for (const key in feature.properties) {
+                if (feature.properties.hasOwnProperty(key)) {
+                    const value = feature.properties[key];
+                    tableHtml += `<tr><th>${key}</th><td>${value}</td></tr>`;
+                }
+            }
+            
+            tableHtml += '</table>';
+            
+            // 创建弹出窗口
+            const popup = L.popup()
+                .setLatLng(latlng)
+                .setContent(`<div class="info-panel"><h4>要素信息</h4>${tableHtml}</div>`)
+                .openOn(map);
+        }
+    </script>
+</body>
+</html>

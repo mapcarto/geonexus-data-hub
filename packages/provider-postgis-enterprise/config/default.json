@@ -1,0 +1,18 @@
+{
+  "provider-postgis-enterprise": {
+    "allowedTables": [
+      "public.business_features",
+      "public.buildings",
+      "public.pois",
+      "public.roads",
+      "public.land_parcels"
+    ],
+    "defaultTable": "public.business_features",
+    "geometryField": "geom",
+    "idField": "id",
+    "maxRecords": 10000,
+    "logLevel": "info",
+    "enableAudit": true,
+    "auditTable": "public.data_access_logs"
+  }
+}
