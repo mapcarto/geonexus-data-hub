@@ -1,10 +1,10 @@
-# GeoNexus 数据中台 - 常见问题解答 (FAQ)
+# GeoNexus Data Hub - 常见问题解答 (FAQ)
 
 ## 基础问题
 
-### 什么是 GeoNexus 数据中台？
+### 什么是 GeoNexus Data Hub？
 
-GeoNexus 数据中台是一个企业级空间数据服务平台，它能够将各种空间数据源（如 PostGIS 数据库）转换为标准的 GeoJSON 和 ArcGIS FeatureServer 格式，并提供三维可视化能力，同时集成了数字资产管理功能。
+GeoNexus Data Hub是一个企业级空间数据服务平台，它能够将各种空间数据源（如 PostGIS 数据库）转换为标准的 GeoJSON 和 ArcGIS FeatureServer 格式，并提供三维可视化能力，同时集成了数字资产管理功能。
 
 ### 这个框架能解决什么问题？
 
@@ -24,7 +24,7 @@ GeoNexus 数据中台是一个企业级空间数据服务平台，它能够将�
 
 ## 安装与配置
 
-### 如何安装 GeoNexus 数据中台？
+### 如何安装 GeoNexus Data Hub？
 
 1. 确保您的系统已安装 Docker 和 Docker Compose
 2. 克隆项目仓库：`git clone https://github.com/mapcarto/geonexus-data-hub.git`

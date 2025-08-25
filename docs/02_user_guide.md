@@ -1,10 +1,10 @@
-# GeoNexus数据中台 - 用户指南
+# GeoNexus Data Hub - 用户指南
 
 ## 欢迎使用
 
-欢迎使用GeoNexus数据中台！本指南将帮助您快速上手，了解如何使用系统的各项功能，以及如何解决可能遇到的常见问题。
+欢迎使用GeoNexus Data Hub！本指南将帮助您快速上手，了解如何使用系统的各项功能，以及如何解决可能遇到的常见问题。
 
-![GeoNexus数据中台](https://via.placeholder.com/800x400?text=GeoNexus数据中台)
+![GeoNexus Data Hub](https://via.placeholder.com/800x400?text=GeoNexus Data Hub)
 
 ## 目录
 
@@ -148,7 +148,7 @@
 
 ### 对象存储服务 (RustFS)
 
-GeoNexus数据中台使用RustFS作为对象存储服务，用于存储和管理媒体资产。RustFS是一个高性能、轻量级的对象存储服务，提供S3兼容的API接口，用于存储和检索任意数量的数据。
+GeoNexus Data Hub使用RustFS作为对象存储服务，用于存储和管理媒体资产。RustFS是一个高性能、轻量级的对象存储服务，提供S3兼容的API接口，用于存储和检索任意数量的数据。
 
 主要特点：
 - 高性能：基于Rust语言开发，提供高效的文件存储和检索

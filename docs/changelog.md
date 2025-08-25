@@ -1,6 +1,6 @@
-# GeoNexus数据中台 - 更新日志
+# GeoNexus Data Hub - 更新日志
 
-本文档记录了GeoNexus数据中台的所有重要变更。
+本文档记录了GeoNexus Data Hub的所有重要变更。
 
 ## [1.0.0] - 2025-08-24
 

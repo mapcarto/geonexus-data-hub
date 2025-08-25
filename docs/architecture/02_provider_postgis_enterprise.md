@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-企业级 PostGIS Provider 是 GeoNexus 数据中台中的核心组件之一，它基于官方的 [@koopjs/provider-postgis](https://github.com/koopjs/provider-postgis) 进行扩展，添加了企业级功能，如安全白名单、审计日志和元数据增强。
+企业级 PostGIS Provider 是 GeoNexus Data Hub中的核心组件之一，它基于官方的 [@koopjs/provider-postgis](https://github.com/koopjs/provider-postgis) 进行扩展，添加了企业级功能，如安全白名单、审计日志和元数据增强。
 
 ## 2. 设计理念
 

@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-GeoNexus DTS Provider (provider-dts) 是GeoNexus数据中台中的核心组件之一，它负责连接数字孪生系统(DTS)，获取三维场景数据，并将其转换为标准的地理空间数据服务。本文档详细描述了该 Provider 的架构设计、技术选型和实现细节。
+GeoNexus DTS Provider (provider-dts) 是GeoNexus Data Hub中的核心组件之一，它负责连接数字孪生系统(DTS)，获取三维场景数据，并将其转换为标准的地理空间数据服务。本文档详细描述了该 Provider 的架构设计、技术选型和实现细节。
 
 ## 2. 设计理念
 
@@ -166,4 +166,4 @@ Provider 提供了模拟数据功能，便于开发和测试：
 
 ## 12. 结论
 
-GeoNexus DTS Provider 通过后端原生API方案，实现了高性能、高可靠性的数据服务组件，为GeoNexus数据中台提供了强大的数据源支持。它的设计和实现充分考虑了企业级应用的需求，包括性能、安全性、可靠性和可扩展性。
+GeoNexus DTS Provider 通过后端原生API方案，实现了高性能、高可靠性的数据服务组件，为GeoNexus Data Hub提供了强大的数据源支持。它的设计和实现充分考虑了企业级应用的需求，包括性能、安全性、可靠性和可扩展性。
