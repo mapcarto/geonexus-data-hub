@@ -11,7 +11,7 @@
     "@koopjs/koop-core": "^8.0.2",
     "@koopjs/output-geoservices": "^2.0.0",
     "config": "^3.3.12",
-    "enterprise-postgis-provider": "file:/usr/src/packages/enterprise-postgis-provider",
+    "provider-postgis-enterprise": "file:/usr/src/packages/provider-postgis-enterprise",
     "express": "^4.18.2",
     "provider-dts": "file:/usr/src/packages/provider-dts"
   },

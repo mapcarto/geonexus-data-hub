@@ -32,8 +32,14 @@ GeoNexus 数据中台是一个强大的地理空间数据集成平台，作为�
 
 4. 访问测试客户端：
    ```
-   http://localhost/test-client/
+   http://localhost:8080/test-client/
    ```
+
+5. 访问管理界面：
+   ```
+   http://localhost:9092
+   ```
+   使用默认用户名"admin"和您在.env文件中设置的DPANEL_PASSWORD密码登录。
 
 ## 文档
 
@@ -53,10 +59,33 @@ GeoNexus 数据中台是一个强大的地理空间数据集成平台，作为�
 
 详细的 API 文档请参阅 [API 参考](./docs/05_api_reference.md)。
 
-## 测试客户端
+## 系统组件
 
-- 2D 地图测试: `http://localhost/test-client/leaflet.html`
-- 3D 地球测试: `http://localhost/test-client/cesium.html`
+### 测试客户端
+
+- 2D 地图测试: `http://localhost:8080/test-client/leaflet.html`
+- 3D 地球测试: `http://localhost:8080/test-client/cesium.html`
+
+### 对象存储
+
+GeoNexus 数据中台使用 RustFS 作为对象存储服务，用于存储和管理数字资产：
+
+- 高性能：基于Rust语言开发，提供高效的文件存储和检索
+- S3兼容：提供与Amazon S3兼容的API接口
+- 轻量级：资源占用少，适合各种部署环境
+- 安全可靠：内置访问控制和数据保护机制
+
+### 管理界面
+
+GeoNexus 数据中台集成了 DPanel 管理界面，提供以下功能：
+
+- 服务状态监控：实时查看所有微服务的运行状态
+- 容器管理：启动、停止、重启各个服务
+- 日志查看：实时查看各服务的日志输出
+- 系统资源监控：监控 CPU、内存使用情况
+- 安全管理：用户权限控制和访问审计
+
+访问地址：`http://localhost:9092`
 
 ## 许可证
 

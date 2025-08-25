@@ -180,7 +180,7 @@ describe('企业级 PostGIS Provider', function() {
       
       expect(result.type).to.equal('FeatureCollection');
       expect(result.metadata).to.exist;
-      expect(result.metadata.provider).to.equal('飞渡企业级PostGIS数据服务');
+      expect(result.metadata.provider).to.equal('GeoNexus 要素引擎 PostGIS数据服务');
       expect(result.metadata.timestamp).to.exist;
       expect(result.metadata.queryTime).to.exist;
       expect(result.metadata.securityLevel).to.equal('企业级');

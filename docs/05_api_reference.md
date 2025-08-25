@@ -330,7 +330,7 @@ GET /dam/items
       "type": "image",
       "file": {
         "id": "file1",
-        "storage": "minio",
+        "storage": "rustfs",
         "filename_disk": "1a2b3c4d.jpg",
         "filename_download": "building_photo.jpg",
         "type": "image/jpeg",
@@ -374,7 +374,7 @@ GET /dam/items/{id}
     "user_created": "admin",
     "file": {
       "id": "file1",
-      "storage": "minio",
+      "storage": "rustfs",
       "filename_disk": "1a2b3c4d.jpg",
       "filename_download": "building_photo.jpg",
       "type": "image/jpeg",

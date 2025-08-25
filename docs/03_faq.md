@@ -1,10 +1,10 @@
-# 飞渡数据服务框架 - 常见问题解答 (FAQ)
+# GeoNexus 数据中台 - 常见问题解答 (FAQ)
 
 ## 基础问题
 
-### 什么是飞渡数据服务框架？
+### 什么是 GeoNexus 数据中台？
 
-飞渡数据服务框架是一个企业级空间数据服务平台，它能够将各种空间数据源（如 PostGIS 数据库）转换为标准的 GeoJSON 和 ArcGIS FeatureServer 格式，并提供三维可视化能力，同时集成了数字资产管理功能。
+GeoNexus 数据中台是一个企业级空间数据服务平台，它能够将各种空间数据源（如 PostGIS 数据库）转换为标准的 GeoJSON 和 ArcGIS FeatureServer 格式，并提供三维可视化能力，同时集成了数字资产管理功能。
 
 ### 这个框架能解决什么问题？
 
@@ -15,46 +15,46 @@
 
 ### 系统的主要组件有哪些？
 
-- **Koop 要素服务**：核心数据转换引擎
-- **企业级 PostGIS Provider**：连接 PostGIS 数据库的增强型适配器
+- **GeoNexus 要素引擎**：核心数据转换引擎
+- **PostGIS Enterprise Provider**：连接 PostGIS 数据库的增强型适配器
 - **三维可视化客户端**：基于 CesiumJS 的三维地球
 - **二维可视化客户端**：基于 Leaflet 的二维地图
-- **数字资产管理服务 (DAM)**：管理和存储媒体资产
+- **GeoNexus 资产服务**：管理和存储媒体资产
 - **API 网关**：统一的访问入口和路由控制
 
 ## 安装与配置
 
-### 如何安装飞渡数据服务框架？
+### 如何安装 GeoNexus 数据中台？
 
 1. 确保您的系统已安装 Docker 和 Docker Compose
-2. 克隆项目仓库：`git clone https://github.com/feidu/data-framework.git`
-3. 进入项目目录：`cd feidu-data-framework`
+2. 克隆项目仓库：`git clone https://github.com/mapcarto/geonexus-data-hub.git`
+3. 进入项目目录：`cd geonexus-data-hub`
 4. 复制环境配置文件：`cp .env.example .env`
 5. 根据需要修改 `.env` 文件中的配置
 6. 运行启动脚本：`./start.sh`
 
 ### 如何配置数据源？
 
-1. 打开 `apps/feidu-server/config/default.json` 文件
-2. 在 `enterprise-postgis` 部分，修改以下配置：
+1. 打开 `apps/feature-engine/config/default.json` 文件
+2. 在 `provider-postgis-enterprise` 部分，修改以下配置：
    - `connection`：数据库连接字符串
    - `allowedTables`：允许访问的表白名单
    - `geometryField`：几何字段名称
-3. 保存文件并重启服务：`docker-compose restart feidu_koop_server`
+3. 保存文件并重启服务：`docker-compose restart feature_engine`
 
 ### 如何添加新的数据表到白名单？
 
-1. 打开 `apps/feidu-server/config/default.json` 文件
-2. 在 `enterprise-postgis.allowedTables` 数组中添加新的表名
+1. 打开 `apps/feature-engine/config/default.json` 文件
+2. 在 `provider-postgis-enterprise.allowedTables` 数组中添加新的表名
 3. 表名格式为 `schema.table`，例如 `public.buildings`
-4. 保存文件并重启服务：`docker-compose restart feidu_koop_server`
+4. 保存文件并重启服务：`docker-compose restart feature_engine`
 
 ### 如何修改系统端口？
 
 1. 打开 `docker-compose.yml` 文件
 2. 修改相应服务的端口映射，例如：
    ```yaml
-   feidu_gateway:
+   gateway:
      ports:
        - "8080:80"  # 将外部端口从 80 改为 8080
    ```
@@ -70,12 +70,16 @@
 
 打开浏览器，访问 `http://localhost/test-client/leaflet.html`
 
+### 如何访问DPanel管理界面？
+
+打开浏览器，访问 `http://localhost:9092`，使用默认用户名"admin"和您在.env文件中设置的DPANEL_PASSWORD密码登录。
+
 ### 如何查询特定的数据？
 
 使用 ArcGIS FeatureServer 查询语法：
 
 ```
-http://localhost/koop/enterprise-postgis/public.business_features/FeatureServer/0/query?where=status='active'&outFields=*&f=geojson
+http://localhost/koop/provider-postgis-enterprise/public.business_features/FeatureServer/0/query?where=status='active'&outFields=*&f=geojson
 ```
 
 参数说明：
@@ -120,7 +124,7 @@ http://localhost/koop/enterprise-postgis/public.business_features/FeatureServer/
 1. 检查数据表是否已添加到白名单
 2. 检查数据库连接是否正常
 3. 确认数据表存在且包含有效的几何字段
-4. 查看 Koop 要素服务日志：`docker logs feidu_koop_server`
+4. 查看要素引擎日志：`docker logs feature_engine`
 
 ### 服务启动失败
 
@@ -134,6 +138,20 @@ http://localhost/koop/enterprise-postgis/public.business_features/FeatureServer/
 2. 检查配置文件格式是否正确
 3. 确保所有依赖服务（如数据库）已启动
 4. 查看 Docker 日志：`docker-compose logs`
+5. 使用DPanel管理界面查看容器状态和日志
+
+### DPanel管理界面无法访问
+
+**可能原因**：
+- DPanel服务未启动
+- 端口冲突
+- 网络配置问题
+
+**解决方案**：
+1. 检查DPanel容器是否运行：`docker ps | grep admin_ui`
+2. 确认端口9092是否被占用：`netstat -tuln | grep 9092`
+3. 重启DPanel服务：`docker-compose restart admin_ui`
+4. 检查网络配置是否正确
 
 ### 审计日志不记录
 
@@ -146,7 +164,7 @@ http://localhost/koop/enterprise-postgis/public.business_features/FeatureServer/
 1. 确认配置文件中 `enableAudit` 设置为 `true`
 2. 检查审计表是否已创建：`public.data_access_logs`
 3. 确认数据库用户有写入审计表的权限
-4. 查看 Koop 要素服务日志：`docker logs feidu_koop_server`
+4. 查看要素引擎日志：`docker logs feature_engine`
 
 ## 性能优化
 
@@ -178,14 +196,55 @@ http://localhost/koop/enterprise-postgis/public.business_features/FeatureServer/
 3. 数据简化
 4. 多级缓存
 
+## 对象存储服务 (RustFS)
+
+### 什么是RustFS？
+
+RustFS是一个高性能、轻量级的对象存储服务，基于Rust语言开发，提供S3兼容的API接口，用于存储和检索任意数量的数据。在GeoNexus数据中台中，RustFS主要用于存储和管理媒体资产，如图片、视频等。
+
+### RustFS与MinIO有什么区别？
+
+- **性能**：RustFS基于Rust语言开发，通常比基于Go的MinIO具有更高的性能和更低的资源占用
+- **轻量级**：RustFS设计更加轻量，启动更快，占用资源更少
+- **兼容性**：两者都提供S3兼容的API接口，但RustFS专注于核心功能，更适合轻量级部署
+
+### 如何访问RustFS存储的文件？
+
+RustFS提供S3兼容的API接口，您可以通过以下方式访问存储的文件：
+
+1. 使用S3客户端工具，如AWS CLI、s3cmd等
+2. 通过资产服务(Directus)的媒体管理界面
+3. 使用S3兼容的SDK进行编程访问
+
+### 如何配置RustFS？
+
+RustFS的配置文件位于项目根目录的`rustfs-config.toml`，主要配置项包括：
+
+```toml
+[server]
+host = "0.0.0.0"
+port = 8000
+
+[s3]
+enabled = true
+access_key = "rustfs"
+secret_key = "rustfs_secret"
+
+[storage]
+root = "/data"
+buckets = ["geonexus-assets"]
+```
+
+您可以根据需要修改这些配置项，然后重启object_storage服务使配置生效。
+
 ## 高级功能
 
 ### 如何扩展系统支持新的数据源？
 
 1. 创建一个新的 Provider 包，继承自 Koop Provider 基类
 2. 实现必要的方法，如 `getData`、`getInfo` 等
-3. 在 `apps/feidu-server/src/plugins.js` 中注册新的 Provider
-4. 重启 Koop 要素服务
+3. 在 `apps/feature-engine/src/plugins.js` 中注册新的 Provider
+4. 重启要素引擎服务
 
 ### 如何自定义数据转换逻辑？
 
@@ -202,13 +261,27 @@ http://localhost/koop/enterprise-postgis/public.business_features/FeatureServer/
 
 ### 如何监控系统性能？
 
-1. 使用 Prometheus 收集系统指标
-2. 使用 Grafana 创建监控仪表板
-3. 监控关键指标：
-   - API 响应时间
-   - 数据库查询性能
-   - 内存和 CPU 使用率
-   - 错误率和异常
+1. 使用DPanel内置的监控功能查看系统资源使用情况
+2. 在DPanel控制面板中查看容器的CPU、内存和网络使用情况
+3. 使用DPanel的日志查看功能实时监控服务日志
+4. 对于更高级的监控需求，可以：
+   - 使用 Prometheus 收集系统指标
+   - 使用 Grafana 创建监控仪表板
+   - 监控关键指标：
+     - API 响应时间
+     - 数据库查询性能
+     - 内存和 CPU 使用率
+     - 错误率和异常
+
+### 如何使用DPanel管理容器？
+
+1. 登录DPanel管理界面：`http://localhost:9092`
+2. 在控制面板中，您可以：
+   - 查看所有容器的状态和资源使用情况
+   - 启动、停止、重启容器
+   - 查看容器日志
+   - 进入容器终端执行命令
+   - 监控容器的资源使用情况
 
 ## 联系与支持
 
@@ -218,4 +291,4 @@ http://localhost/koop/enterprise-postgis/public.business_features/FeatureServer/
 
 *如果您的问题未在此 FAQ 中列出，请联系我们的技术支持团队。*
 
-*最后更新：2025 年 8 月 24 日*
+*最后更新：2025 年 8 月 25 日*

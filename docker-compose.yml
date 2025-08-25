@@ -61,19 +61,23 @@ services:
       - DB_PASSWORD=${ASSET_DB_PASSWORD}
       - ADMIN_EMAIL=${DIRECTUS_ADMIN_EMAIL}
       - ADMIN_PASSWORD=${DIRECTUS_ADMIN_PASSWORD}
-      - STORAGE_LOCATIONS=minio
-      - STORAGE_MINIO_DRIVER=s3
-      - STORAGE_MINIO_ENDPOINT=http://minio:9000
-      - STORAGE_MINIO_BUCKET=directus-assets
-      - STORAGE_MINIO_KEY=${MINIO_ROOT_USER}
-      - STORAGE_MINIO_SECRET=${MINIO_ROOT_PASSWORD}
-      - STORAGE_MINIO_PORT=9000
-      - STORAGE_MINIO_USE_SSL=false
+      - STORAGE_LOCATIONS=rustfs
+      - STORAGE_RUSTFS_DRIVER=s3
+      - STORAGE_RUSTFS_ENDPOINT=http://object_storage:9000
+      - STORAGE_RUSTFS_BUCKET=geonexus-assets
+      - STORAGE_RUSTFS_KEY=${RUSTFS_ACCESS_KEY:-rustfs}
+      - STORAGE_RUSTFS_SECRET=${RUSTFS_SECRET_KEY:-rustfs_secret}
+      - STORAGE_RUSTFS_REGION=${RUSTFS_REGION:-cn-north-1}
+      - STORAGE_RUSTFS_PORT=9000
+      - STORAGE_RUSTFS_USE_SSL=false
+      - STORAGE_RUSTFS_FORCE_PATH_STYLE=true
+      - AWS_S3_FORCE_PATH_STYLE=true
+      - DEFAULT_LOCALE=zh-CN
     networks:
       - geonexus-net
     depends_on:
       - asset_db
-      - minio
+      - object_storage
 
   # 4. 空间数据库 (PostGIS for 要素引擎)
   spatial_db:
@@ -105,29 +109,66 @@ services:
     networks:
       - geonexus-net
 
-  # 6. 对象存储 (MinIO for 资产服务)
-  minio:
-    image: minio/minio:RELEASE.2022-10-29T06-21-33Z
+  # 6. 对象存储 (RustFS for 资产服务)
+  object_storage:
+    image: rustfs/rustfs:latest
     platform: linux/amd64
-    container_name: geonexus_minio
-    command: server /data
+    container_name: geonexus_object_storage
     ports:
       - "9090:9000" # S3 API Port
-      - "9091:9001" # MinIO Console Port
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_BROWSER_REDIRECT_URL=http://localhost:9091
-      - MINIO_SERVER_URL=http://localhost:9090
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfs}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfs_secret}
     volumes:
-      - minio_data:/data
+      - ./storage:/data
+    networks:
+      - geonexus-net
+
+  # 7. 管理界面 (DPanel - Docker管理面板)
+  admin_ui:
+    image: dpanel/dpanel:latest
+    container_name: geonexus_admin_ui
+    restart: always
+    ports:
+      - "9092:8080"
+    environment:
+      - DPANEL_ADMIN_USER=admin
+      - DPANEL_ADMIN_PASSWORD=${DPANEL_PASSWORD:-adminpassword}
+      - DPANEL_ENABLE_TELEMETRY=false
+      - DPANEL_LOG_LEVEL=info
+      - APP_NAME=geonexus_admin_ui
+    volumes:
+      - dpanel_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - geonexus-net
+
+  # 8. n8n 工作流自动化平台
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: geonexus_n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-admin}
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
     networks:
       - geonexus-net
 
 volumes:
   spatial_db_data:
   asset_db_data:
-  minio_data:
+  dpanel_data:
+  n8n_data:
 
 networks:
   geonexus-net:

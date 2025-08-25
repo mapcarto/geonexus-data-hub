@@ -1,6 +1,6 @@
-# 飞渡数据服务框架文档
+# GeoNexus 数据中台文档
 
-欢迎使用飞渡数据服务框架文档。本文档提供了关于框架的详细信息、使用指南和开发指南。
+欢迎使用 GeoNexus 数据中台文档。本文档提供了关于数据中台的详细信息、使用指南和开发指南。
 
 ## 用户文档
 
@@ -13,8 +13,8 @@
 ## 架构文档
 
 1. [整体架构](./architecture/01_overall_architecture.md) - 系统整体架构设计
-2. [企业级 PostGIS Provider](./architecture/02_enterprise_postgis_provider.md) - 企业级 PostGIS Provider 设计
-3. [飞渡 DTS Provider](./architecture/03_feidu_dts_provider.md) - 飞渡 DTS Provider 设计
+2. [PostGIS Enterprise Provider](./architecture/02_provider_postgis_enterprise.md) - PostGIS Enterprise Provider 设计
+3. [DTS Provider](./architecture/03_provider_dts.md) - DTS Provider 设计
 
 ## 开发文档
 

@@ -251,7 +251,7 @@ class GeoNexusDTSModel {
         type: 'FeatureCollection',
         features: [],
         metadata: {
-          provider: '飞渡DTS数据服务',
+          provider: 'GeoNexus 要素引擎 DTS数据服务',
           timestamp: new Date().toISOString(),
           error: `数据转换失败: ${error.message}`
         }

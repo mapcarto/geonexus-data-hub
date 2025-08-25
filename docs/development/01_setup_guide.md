@@ -37,8 +37,8 @@ cp .env.example .env
 - `ASSET_DB_USER`: 资产数据库用户名
 - `ASSET_DB_PASSWORD`: 资产数据库密码
 - `ASSET_DB_NAME`: 资产数据库名称
-- `MINIO_ROOT_USER`: MinIO 根用户名
-- `MINIO_ROOT_PASSWORD`: MinIO 根用户密码
+- `RUSTFS_ACCESS_KEY`: RustFS 访问密钥
+- `RUSTFS_SECRET_KEY`: RustFS 密钥
 
 ## 启动开发环境
 
@@ -55,7 +55,7 @@ docker-compose up -d
 - **geonexus_spatial_db**: PostGIS 空间数据库
 - **geonexus_asset_db**: PostgreSQL 资产数据库
 - **geonexus_asset_service**: GeoNexus 资产服务
-- **geonexus_minio**: MinIO 对象存储
+- **geonexus_object_storage**: RustFS 对象存储
 
 ## 验证服务状态
 
@@ -76,6 +76,16 @@ http://localhost/test-client/
 ```
 
 您应该能看到测试客户端的主页，包含 2D 和 3D 测试选项。
+
+## 访问管理界面
+
+打开浏览器，访问DPanel管理界面：
+
+```
+http://localhost:9092
+```
+
+使用默认用户名"admin"和您在.env文件中设置的DPANEL_PASSWORD密码登录，您可以查看和管理所有Docker容器。
 
 ## 本地开发
 

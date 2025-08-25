@@ -110,7 +110,7 @@ class EnterprisePostgisModel extends OfficialPostgisProvider.Model {
       
       // 增强元数据
       geojson.metadata = geojson.metadata || {};
-      geojson.metadata.provider = '飞渡企业级PostGIS数据服务';
+      geojson.metadata.provider = 'GeoNexus 要素引擎 PostGIS数据服务';
       geojson.metadata.timestamp = new Date().toISOString();
       geojson.metadata.queryTime = `${Date.now() - startTime}ms`;
       geojson.metadata.securityLevel = '企业级';
@@ -167,7 +167,7 @@ class EnterprisePostgisProvider extends OfficialPostgisProvider {
     // 设置provider类型
     this.type = 'provider';
     
-    console.log('飞渡企业级PostGIS Provider已初始化');
+    console.log('GeoNexus 要素引擎 PostGIS Provider已初始化');
   }
 }
 

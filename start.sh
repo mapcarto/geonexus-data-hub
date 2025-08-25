@@ -25,7 +25,7 @@ echo "正在检查服务状态..."
 sleep 5
 
 # 检查容器状态
-CONTAINERS=("geonexus_gateway" "geonexus_feature_engine" "geonexus_spatial_db" "geonexus_asset_db" "geonexus_asset_service" "geonexus_minio")
+CONTAINERS=("geonexus_gateway" "geonexus_feature_engine" "geonexus_spatial_db" "geonexus_asset_db" "geonexus_asset_service" "geonexus_object_storage" "geonexus_admin_ui")
 ALL_RUNNING=true
 
 for CONTAINER in "${CONTAINERS[@]}"; do
@@ -46,8 +46,6 @@ if [ "$ALL_RUNNING" = true ]; then
     echo ""
     echo "您可以通过以下地址访问服务:"
     echo "- 测试客户端: http://localhost:8080/test-client/"
-    echo "- 2D 地图测试: http://localhost:8080/test-client/leaflet.html"
-    echo "- 3D 地球测试: http://localhost:8080/test-client/cesium.html"
     echo "- API 健康检查: http://localhost:8080/health"
     echo ""
     echo "GeoNexus 要素引擎 PostGIS Provider 示例请求:"
@@ -55,6 +53,11 @@ if [ "$ALL_RUNNING" = true ]; then
     echo ""
     echo "GeoNexus 资产服务:"
     echo "http://localhost:6062"
+    echo ""
+    echo "GeoNexus 管理界面 (DPanel):"
+    echo "- 直接访问: http://localhost:9092"
+    echo "- 默认用户名: admin"
+    echo "- 默认密码: 请查看环境变量DPANEL_PASSWORD"
     echo ""
     echo "如需停止所有服务，请运行: docker-compose down"
 else

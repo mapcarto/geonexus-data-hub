@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoNexus - 太极开发平台 API 测试</title>
+    <!-- 引入 Element UI -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #409EFF;
+            color: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.8;
+        }
+        .card {
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ebeef5;
+        }
+        .response-container {
+            background-color: #f8f8f8;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .el-form-item {
+            margin-bottom: 22px;
+        }
+        .api-description {
+            color: #606266;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .el-tabs__item {
+            font-weight: bold;
+        }
+        .el-tabs__content {
+            padding: 20px 0;
+        }
+        .el-button--primary {
+            background-color: #409EFF;
+        }
+        .el-button--success {
+            background-color: #67C23A;
+        }
+        .el-button--warning {
+            background-color: #E6A23C;
+        }
+        .el-button--danger {
+            background-color: #F56C6C;
+        }
+        .el-button--info {
+            background-color: #909399;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>GeoNexus - 太极开发平台 API 测试</h1>
+                <p>用于测试与太极开发平台 API 的交互</p>
+            </div>
+            
+            <el-tabs v-model="activeTab" type="border-card">
+                <!-- 认证配置 -->
+                <el-tab-pane label="认证配置" name="auth">
+                    <div class="card">
+                        <div class="card-title">API 认证配置</div>
+                        <div class="api-description">
+                            配置访问太极开发平台 API 所需的认证信息。请确保您已获取有效的 API 密钥和访问令牌。
+                        </div>
+                        <el-form :model="authForm" label-width="120px" size="small">
+                            <el-form-item label="API 基础 URL">
+                                <el-input v-model="authForm.baseUrl" placeholder="例如: https://api.taiji.geonexus.com/v1"></el-input>
+                            </el-form-item>
+                            <el-form-item label="API 密钥">
+                                <el-input v-model="authForm.apiKey" placeholder="输入您的 API 密钥" show-password></el-input>
+                            </el-form-item>
+                            <el-form-item label="访问令牌">
+                                <el-input v-model="authForm.accessToken" placeholder="输入您的访问令牌" show-password></el-input>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="saveAuthConfig">保存配置</el-button>
+                                <el-button type="success" @click="testConnection">测试连接</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </el-tab-pane>
+                
+                <!-- 场景数据 API -->
+                <el-tab-pane label="场景数据 API" name="scene">
+                    <div class="card">
+                        <div class="card-title">场景数据查询</div>
+                        <div class="api-description">
+                            查询太极开发平台中的场景数据，支持按空间范围和属性条件过滤。
+                        </div>
+                        <el-form :model="sceneForm" label-width="120px" size="small">
+                            <el-form-item label="场景 ID">
+                                <el-input v-model="sceneForm.sceneId" placeholder="输入场景 ID"></el-input>
+                            </el-form-item>
+                            <el-form-item label="空间范围">
+                                <el-row :gutter="10">
+                                    <el-col :span="6">
+                                        <el-input v-model="sceneForm.minX" placeholder="最小经度"></el-input>
+                                    </el-col>
+                                    <el-col :span="6">
+                                        <el-input v-model="sceneForm.minY" placeholder="最小纬度"></el-input>
+                                    </el-col>
+                                    <el-col :span="6">
+                                        <el-input v-model="sceneForm.maxX" placeholder="最大经度"></el-input>
+                                    </el-col>
+                                    <el-col :span="6">
+                                        <el-input v-model="sceneForm.maxY" placeholder="最大纬度"></el-input>
+                                    </el-col>
+                                </el-row>
+                            </el-form-item>
+                            <el-form-item label="属性条件">
+                                <el-input v-model="sceneForm.where" placeholder="例如: status='active'"></el-input>
+                            </el-form-item>
+                            <el-form-item label="返回字段">
+                                <el-input v-model="sceneForm.fields" placeholder="例如: id,name,type (留空返回所有字段)"></el-input>
+                            </el-form-item>
+                            <el-form-item label="最大记录数">
+                                <el-input-number v-model="sceneForm.limit" :min="1" :max="1000"></el-input-number>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="querySceneData">查询数据</el-button>
+                                <el-button type="info" @click="resetSceneForm">重置</el-button>
+                            </el-form-item>
+                        </el-form>
+                        <div v-if="sceneResponse" class="response-container">
+                            <pre>{{ JSON.stringify(sceneResponse, null, 2) }}</pre>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                
+                <!-- 模型数据 API -->
+                <el-tab-pane label="模型数据 API" name="model">
+                    <div class="card">
+                        <div class="card-title">模型数据查询</div>
+                        <div class="api-description">
+                            查询太极开发平台中的三维模型数据，支持按 ID 或空间范围过滤。
+                        </div>
+                        <el-form :model="modelForm" label-width="120px" size="small">
+                            <el-form-item label="查询方式">
+                                <el-radio-group v-model="modelForm.queryType">
+                                    <el-radio label="id">按 ID 查询</el-radio>
+                                    <el-radio label="spatial">按空间范围查询</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="模型 ID" v-if="modelForm.queryType === 'id'">
+                                <el-input v-model="modelForm.modelId" placeholder="输入模型 ID"></el-input>
+                            </el-form-item>
+                            <el-form-item label="空间范围" v-if="modelForm.queryType === 'spatial'">
+                                <el-row :gutter="10">
+                                    <el-col :span="6">
+                                        <el-input v-model="modelForm.minX" placeholder="最小经度"></el-input>
+                                    </el-col>
+                                    <el-col :span="6">
+                                        <el-input v-model="modelForm.minY" placeholder="最小纬度"></el-input>
+                                    </el-col>
+                                    <el-col :span="6">
+                                        <el-input v-model="modelForm.maxX" placeholder="最大经度"></el-input>
+                                    </el-col>
+                                    <el-col :span="6">
+                                        <el-input v-model="modelForm.maxY" placeholder="最大纬度"></el-input>
+                                    </el-col>
+                                </el-row>
+                            </el-form-item>
+                            <el-form-item label="模型类型">
+                                <el-select v-model="modelForm.modelType" placeholder="选择模型类型">
+                                    <el-option label="建筑" value="building"></el-option>
+                                    <el-option label="地形" value="terrain"></el-option>
+                                    <el-option label="道路" value="road"></el-option>
+                                    <el-option label="植被" value="vegetation"></el-option>
+                                    <el-option label="全部" value="all"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="LOD 级别">
+                                <el-select v-model="modelForm.lod" placeholder="选择 LOD 级别">
+                                    <el-option label="LOD 0" value="0"></el-option>
+                                    <el-option label="LOD 1" value="1"></el-option>
+                                    <el-option label="LOD 2" value="2"></el-option>
+                                    <el-option label="LOD 3" value="3"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="queryModelData">查询数据</el-button>
+                                <el-button type="info" @click="resetModelForm">重置</el-button>
+                            </el-form-item>
+                        </el-form>
+                        <div v-if="modelResponse" class="response-container">
+                            <pre>{{ JSON.stringify(modelResponse, null, 2) }}</pre>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                
+                <!-- 空间分析 API -->
+                <el-tab-pane label="空间分析 API" name="analysis">
+                    <div class="card">
+                        <div class="card-title">空间分析</div>
+                        <div class="api-description">
+                            使用太极开发平台的空间分析功能，如缓冲区分析、可视域分析等。
+                        </div>
+                        <el-form :model="analysisForm" label-width="120px" size="small">
+                            <el-form-item label="分析类型">
+                                <el-select v-model="analysisForm.type" placeholder="选择分析类型">
+                                    <el-option label="缓冲区分析" value="buffer"></el-option>
+                                    <el-option label="可视域分析" value="viewshed"></el-option>
+                                    <el-option label="最短路径分析" value="shortestPath"></el-option>
+                                    <el-option label="淹没分析" value="flood"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            
+                            <!-- 缓冲区分析参数 -->
+                            <template v-if="analysisForm.type === 'buffer'">
+                                <el-form-item label="几何类型">
+                                    <el-select v-model="analysisForm.buffer.geometryType" placeholder="选择几何类型">
+                                        <el-option label="点" value="point"></el-option>
+                                        <el-option label="线" value="line"></el-option>
+                                        <el-option label="面" value="polygon"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="几何坐标">
+                                    <el-input type="textarea" v-model="analysisForm.buffer.geometry" placeholder="输入 GeoJSON 格式的几何坐标"></el-input>
+                                </el-form-item>
+                                <el-form-item label="缓冲距离(米)">
+                                    <el-input-number v-model="analysisForm.buffer.distance" :min="0" :max="10000"></el-input-number>
+                                </el-form-item>
+                            </template>
+                            
+                            <!-- 可视域分析参数 -->
+                            <template v-if="analysisForm.type === 'viewshed'">
+                                <el-form-item label="观察点坐标">
+                                    <el-row :gutter="10">
+                                        <el-col :span="8">
+                                            <el-input v-model="analysisForm.viewshed.x" placeholder="经度"></el-input>
+                                        </el-col>
+                                        <el-col :span="8">
+                                            <el-input v-model="analysisForm.viewshed.y" placeholder="纬度"></el-input>
+                                        </el-col>
+                                        <el-col :span="8">
+                                            <el-input v-model="analysisForm.viewshed.z" placeholder="高度(米)"></el-input>
+                                        </el-col>
+                                    </el-row>
+                                </el-form-item>
+                                <el-form-item label="可视距离(米)">
+                                    <el-input-number v-model="analysisForm.viewshed.radius" :min="0" :max="10000"></el-input-number>
+                                </el-form-item>
+                                <el-form-item label="水平视角(度)">
+                                    <el-input-number v-model="analysisForm.viewshed.horizontalAngle" :min="0" :max="360"></el-input-number>
+                                </el-form-item>
+                                <el-form-item label="垂直视角(度)">
+                                    <el-input-number v-model="analysisForm.viewshed.verticalAngle" :min="0" :max="180"></el-input-number>
+                                </el-form-item>
+                            </template>
+                            
+                            <!-- 最短路径分析参数 -->
+                            <template v-if="analysisForm.type === 'shortestPath'">
+                                <el-form-item label="起点坐标">
+                                    <el-row :gutter="10">
+                                        <el-col :span="12">
+                                            <el-input v-model="analysisForm.shortestPath.startX" placeholder="经度"></el-input>
+                                        </el-col>
+                                        <el-col :span="12">
+                                            <el-input v-model="analysisForm.shortestPath.startY" placeholder="纬度"></el-input>
+                                        </el-col>
+                                    </el-row>
+                                </el-form-item>
+                                <el-form-item label="终点坐标">
+                                    <el-row :gutter="10">
+                                        <el-col :span="12">
+                                            <el-input v-model="analysisForm.shortestPath.endX" placeholder="经度"></el-input>
+                                        </el-col>
+                                        <el-col :span="12">
+                                            <el-input v-model="analysisForm.shortestPath.endY" placeholder="纬度"></el-input>
+                                        </el-col>
+                                    </el-row>
+                                </el-form-item>
+                                <el-form-item label="路径类型">
+                                    <el-select v-model="analysisForm.shortestPath.type" placeholder="选择路径类型">
+                                        <el-option label="最短距离" value="distance"></el-option>
+                                        <el-option label="最短时间" value="time"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </template>
+                            
+                            <!-- 淹没分析参数 -->
+                            <template v-if="analysisForm.type === 'flood'">
+                                <el-form-item label="中心点坐标">
+                                    <el-row :gutter="10">
+                                        <el-col :span="12">
+                                            <el-input v-model="analysisForm.flood.centerX" placeholder="经度"></el-input>
+                                        </el-col>
+                                        <el-col :span="12">
+                                            <el-input v-model="analysisForm.flood.centerY" placeholder="纬度"></el-input>
+                                        </el-col>
+                                    </el-row>
+                                </el-form-item>
+                                <el-form-item label="淹没半径(米)">
+                                    <el-input-number v-model="analysisForm.flood.radius" :min="0" :max="10000"></el-input-number>
+                                </el-form-item>
+                                <el-form-item label="淹没高度(米)">
+                                    <el-input-number v-model="analysisForm.flood.height" :min="0" :max="100"></el-input-number>
+                                </el-form-item>
+                                <el-form-item label="淹没颜色">
+                                    <el-color-picker v-model="analysisForm.flood.color"></el-color-picker>
+                                </el-form-item>
+                            </template>
+                            
+                            <el-form-item>
+                                <el-button type="primary" @click="performAnalysis">执行分析</el-button>
+                                <el-button type="info" @click="resetAnalysisForm">重置</el-button>
+                            </el-form-item>
+                        </el-form>
+                        <div v-if="analysisResponse" class="response-container">
+                            <pre>{{ JSON.stringify(analysisResponse, null, 2) }}</pre>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                
+                <!-- 批量数据处理 API -->
+                <el-tab-pane label="批量数据处理" name="batch">
+                    <div class="card">
+                        <div class="card-title">批量数据处理</div>
+                        <div class="api-description">
+                            使用太极开发平台的批量数据处理功能，如数据导入、导出、转换等。
+                        </div>
+                        <el-form :model="batchForm" label-width="120px" size="small">
+                            <el-form-item label="处理类型">
+                                <el-select v-model="batchForm.type" placeholder="选择处理类型">
+                                    <el-option label="数据导入" value="import"></el-option>
+                                    <el-option label="数据导出" value="export"></el-option>
+                                    <el-option label="数据转换" value="convert"></el-option>
+                                    <el-option label="数据清洗" value="clean"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            
+                            <!-- 数据导入参数 -->
+                            <template v-if="batchForm.type === 'import'">
+                                <el-form-item label="数据源类型">
+                                    <el-select v-model="batchForm.import.sourceType" placeholder="选择数据源类型">
+                                        <el-option label="Shapefile" value="shapefile"></el-option>
+                                        <el-option label="GeoJSON" value="geojson"></el-option>
+                                        <el-option label="KML" value="kml"></el-option>
+                                        <el-option label="CSV" value="csv"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="目标场景 ID">
+                                    <el-input v-model="batchForm.import.targetSceneId" placeholder="输入目标场景 ID"></el-input>
+                                </el-form-item>
+                                <el-form-item label="数据文件">
+                                    <el-upload
+                                        action="#"
+                                        :auto-upload="false"
+                                        :on-change="handleFileChange"
+                                        :limit="1">
+                                        <el-button size="small" type="primary">选择文件</el-button>
+                                        <div slot="tip" class="el-upload__tip">请选择数据文件，大小不超过 50MB</div>
+                                    </el-upload>
+                                </el-form-item>
+                            </template>
+                            
+                            <!-- 数据导出参数 -->
+                            <template v-if="batchForm.type === 'export'">
+                                <el-form-item label="场景 ID">
+                                    <el-input v-model="batchForm.export.sceneId" placeholder="输入场景 ID"></el-input>
+                                </el-form-item>
+                                <el-form-item label="导出格式">
+                                    <el-select v-model="batchForm.export.format" placeholder="选择导出格式">
+                                        <el-option label="Shapefile" value="shapefile"></el-option>
+                                        <el-option label="GeoJSON" value="geojson"></el-option>
+                                        <el-option label="KML" value="kml"></el-option>
+                                        <el-option label="CSV" value="csv"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="空间过滤">
+                                    <el-switch v-model="batchForm.export.spatialFilter"></el-switch>
+                                </el-form-item>
+                                <el-form-item label="空间范围" v-if="batchForm.export.spatialFilter">
+                                    <el-row :gutter="10">
+                                        <el-col :span="6">
+                                            <el-input v-model="batchForm.export.minX" placeholder="最小经度"></el-input>
+                                        </el-col>
+                                        <el-col :span="6">
+                                            <el-input v-model="batchForm.export.minY" placeholder="最小纬度"></el-input>
+                                        </el-col>
+                                        <el-col :span="6">
+                                            <el-input v-model="batchForm.export.maxX" placeholder="最大经度"></el-input>
+                                        </el-col>
+                                        <el-col :span="6">
+                                            <el-input v-model="batchForm.export.maxY" placeholder="最大纬度"></el-input>
+                                        </el-col>
+                                    </el-row>
+                                </el-form-item>
+                            </template>
+                            
+                            <!-- 数据转换参数 -->
+                            <template v-if="batchForm.type === 'convert'">
+                                <el-form-item label="源数据类型">
+                                    <el-select v-model="batchForm.convert.sourceType" placeholder="选择源数据类型">
+                                        <el-option label="Shapefile" value="shapefile"></el-option>
+                                        <el-option label="GeoJSON" value="geojson"></el-option>
+                                        <el-option label="KML" value="kml"></el-option>
+                                        <el-option label="CSV" value="csv"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="目标数据类型">
+                                    <el-select v-model="batchForm.convert.targetType" placeholder="选择目标数据类型">
+                                        <el-option label="Shapefile" value="shapefile"></el-option>
+                                        <el-option label="GeoJSON" value="geojson"></el-option>
+                                        <el-option label="KML" value="kml"></el-option>
+                                        <el-option label="CSV" value="csv"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="数据文件">
+                                    <el-upload
+                                        action="#"
+                                        :auto-upload="false"
+                                        :on-change="handleFileChange"
+                                        :limit="1">
+                                        <el-button size="small" type="primary">选择文件</el-button>
+                                        <div slot="tip" class="el-upload__tip">请选择数据文件，大小不超过 50MB</div>
+                                    </el-upload>
+                                </el-form-item>
+                            </template>
+                            
+                            <!-- 数据清洗参数 -->
+                            <template v-if="batchForm.type === 'clean'">
+                                <el-form-item label="场景 ID">
+                                    <el-input v-model="batchForm.clean.sceneId" placeholder="输入场景 ID"></el-input>
+                                </el-form-item>
+                                <el-form-item label="清洗操作">
+                                    <el-checkbox-group v-model="batchForm.clean.operations">
+                                        <el-checkbox label="removeInvalid">移除无效几何</el-checkbox>
+                                        <el-checkbox label="fixSelfIntersections">修复自相交</el-checkbox>
+                                        <el-checkbox label="simplify">简化几何</el-checkbox>
+                                        <el-checkbox label="snap">捕捉到网格</el-checkbox>
+                                    </el-checkbox-group>
+                                </el-form-item>
+                                <el-form-item label="容差(米)" v-if="batchForm.clean.operations.includes('simplify')">
+                                    <el-input-number v-model="batchForm.clean.tolerance" :min="0.001" :max="10" :step="0.001"></el-input-number>
+                                </el-form-item>
+                            </template>
+                            
+                            <el-form-item>
+                                <el-button type="primary" @click="processBatchData">执行处理</el-button>
+                                <el-button type="info" @click="resetBatchForm">重置</el-button>
+                            </el-form-item>
+                        </el-form>
+                        <div v-if="batchResponse" class="response-container">
+                            <pre>{{ JSON.stringify(batchResponse, null, 2) }}</pre>
+                        </div>
+                    </div>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+    </div>
+    
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    activeTab: 'auth',
+                    authForm: {
+                        baseUrl: 'https://api.taiji.geonexus.com/v1',
+                        apiKey: '',
+                        accessToken: ''
+                    },
+                    sceneForm: {
+                        sceneId: 'buildings',
+                        minX: '116.3',
+                        minY: '39.8',
+                        maxX: '116.5',
+                        maxY: '40.0',
+                        where: "status='active'",
+                        fields: '',
+                        limit: 100
+                    },
+                    modelForm: {
+                        queryType: 'spatial',
+                        modelId: '',
+                        minX: '116.3',
+                        minY: '39.8',
+                        maxX: '116.5',
+                        maxY: '40.0',
+                        modelType: 'building',
+                        lod: '2'
+                    },
+                    analysisForm: {
+                        type: 'buffer',
+                        buffer: {
+                            geometryType: 'point',
+                            geometry: '{"type":"Point","coordinates":[116.4,39.9]}',
+                            distance: 100
+                        },
+                        viewshed: {
+                            x: '116.4',
+                            y: '39.9',
+                            z: '50',
+                            radius: 1000,
+                            horizontalAngle: 120,
+                            verticalAngle: 60
+                        },
+                        shortestPath: {
+                            startX: '116.38',
+                            startY: '39.88',
+                            endX: '116.42',
+                            endY: '39.92',
+                            type: 'distance'
+                        },
+                        flood: {
+                            centerX: '116.4',
+                            centerY: '39.9',
+                            radius: 500,
+                            height: 10,
+                            color: '#1E90FF'
+                        }
+                    },
+                    batchForm: {
+                        type: 'import',
+                        import: {
+                            sourceType: 'shapefile',
+                            targetSceneId: 'buildings',
+                            file: null
+                        },
+                        export: {
+                            sceneId: 'buildings',
+                            format: 'geojson',
+                            spatialFilter: false,
+                            minX: '116.3',
+                            minY: '39.8',
+                            maxX: '116.5',
+                            maxY: '40.0'
+                        },
+                        convert: {
+                            sourceType: 'shapefile',
+                            targetType: 'geojson',
+                            file: null
+                        },
+                        clean: {
+                            sceneId: 'buildings',
+                            operations: ['removeInvalid', 'fixSelfIntersections'],
+                            tolerance: 0.1
+                        }
+                    },
+                    sceneResponse: null,
+                    modelResponse: null,
+                    analysisResponse: null,
+                    batchResponse: null,
+                    selectedFile: null
+                };
+            },
+            methods: {
+                saveAuthConfig() {
+                    localStorage.setItem('taiji_api_config', JSON.stringify(this.authForm));
+                    this.$message({
+                        message: '认证配置已保存',
+                        type: 'success'
+                    });
+                },
+                testConnection() {
+                    // 模拟 API 连接测试
+                    setTimeout(() => {
+                        this.$message({
+                            message: '连接成功！API 服务可用',
+                            type: 'success'
+                        });
+                    }, 1000);
+                },
+                querySceneData() {
+                    // 模拟场景数据查询
+                    setTimeout(() => {
+                        this.sceneResponse = {
+                            type: "FeatureCollection",
+                            features: [
+                                {
+                                    type: "Feature",
+                                    id: "building_1",
+                                    geometry: {
+                                        type: "Polygon",
+                                        coordinates: [[[116.38, 39.88], [116.39, 39.88], [116.39, 39.89], [116.38, 39.89], [116.38, 39.88]]]
+                                    },
+                                    properties: {
+                                        name: 'GeoNexus总部大厦',
+                                        height: 120,
+                                        floors: 30,
+                                        status: 'active',
+                                        asset_ids: ['asset1', 'asset2']
+                                    }
+                                },
+                                {
+                                    type: "Feature",
+                                    id: "building_2",
+                                    geometry: {
+                                        type: "Polygon",
+                                        coordinates: [[[116.40, 39.90], [116.41, 39.90], [116.41, 39.91], [116.40, 39.91], [116.40, 39.90]]]
+                                    },
+                                    properties: {
+                                        name: '创新中心',
+                                        height: 80,
+                                        floors: 20,
+                                        status: 'active',
+                                        asset_ids: ['asset3']
+                                    }
+                                }
+                            ],
+                            totalFeatures: 2,
+                            bbox: [116.38, 39.88, 116.41, 39.91]
+                        };
+                    }, 1000);
+                },
+                resetSceneForm() {
+                    this.sceneForm = {
+                        sceneId: 'buildings',
+                        minX: '116.3',
+                        minY: '39.8',
+                        maxX: '116.5',
+                        maxY: '40.0',
+                        where: "status='active'",
+                        fields: '',
+                        limit: 100
+                    };
+                    this.sceneResponse = null;
+                },
+                queryModelData() {
+                    // 模拟模型数据查询
+                    setTimeout(() => {
+                        this.modelResponse = {
+                            models: [
+                                {
+                                    id: "model_1",
+                                    type: "building",
+                                    lod: 2,
+                                    format: "glTF",
+                                    url: "https://assets.geonexus.com/models/building_1.glb",
+                                    bbox: [116.38, 39.88, 116.39, 39.89],
+                                    properties: {
+                                        name: 'GeoNexus总部大厦',
+                                        height: 120,
+                                        floors: 30
+                                    }
+                                },
+                                {
+                                    id: "model_2",
+                                    type: "building",
+                                    lod: 2,
+                                    format: "glTF",
+                                    url: "https://assets.geonexus.com/models/building_2.glb",
+                                    bbox: [116.40, 39.90, 116.41, 39.91],
+                                    properties: {
+                                        name: '创新中心',
+                                        height: 80,
+                                        floors: 20
+                                    }
+                                }
+                            ],
+                            totalModels: 2
+                        };
+                    }, 1000);
+                },
+                resetModelForm() {
+                    this.modelForm = {
+                        queryType: 'spatial',
+                        modelId: '',
+                        minX: '116.3',
+                        minY: '39.8',
+                        maxX: '116.5',
+                        maxY: '40.0',
+                        modelType: 'building',
+                        lod: '2'
+                    };
+                    this.modelResponse = null;
+                },
+                performAnalysis() {
+                    // 模拟空间分析
+                    setTimeout(() => {
+                        if (this.analysisForm.type === 'buffer') {
+                            this.analysisResponse = {
+                                type: "FeatureCollection",
+                                features: [
+                                    {
+                                        type: "Feature",
+                                        geometry: {
+                                            type: "Polygon",
+                                            coordinates: [
+                                                [
+                                                    [116.401, 39.9],
+                                                    [116.4005, 39.901],
+                                                    [116.4, 39.902],
+                                                    [116.399, 39.901],
+                                                    [116.398, 39.9],
+                                                    [116.399, 39.899],
+                                                    [116.4, 39.898],
+                                                    [116.4005, 39.899],
+                                                    [116.401, 39.9]
+                                                ]
+                                            ]
+                                        },
+                                        properties: {
+                                            analysisType: "buffer",
+                                            distance: this.analysisForm.buffer.distance,
+                                            timestamp: new Date().toISOString()
+                                        }
+                                    }
+                                ]
+                            };
+                        } else if (this.analysisForm.type === 'viewshed') {
+                            this.analysisResponse = {
+                                type: "FeatureCollection",
+                                features: [
+                                    {
+                                        type: "Feature",
+                                        geometry: {
+                                            type: "Polygon",
+                                            coordinates: [
+                                                [
+                                                    [116.4, 39.9],
+                                                    [116.41, 39.91],
+                                                    [116.42, 39.905],
+                                                    [116.415, 39.895],
+                                                    [116.405, 39.89],
+                                                    [116.395, 39.895],
+                                                    [116.39, 39.905],
+                                                    [116.395, 39.91],
+                                                    [116.4, 39.9]
+                                                ]
+                                            ]
+                                        },
+                                        properties: {
+                                            analysisType: "viewshed",
+                                            observerPosition: [
+                                                parseFloat(this.analysisForm.viewshed.x),
+                                                parseFloat(this.analysisForm.viewshed.y),
+                                                parseFloat(this.analysisForm.viewshed.z)
+                                            ],
+                                            radius: this.analysisForm.viewshed.radius,
+                                            timestamp: new Date().toISOString()
+                                        }
+                                    }
+                                ]
+                            };
+                        } else if (this.analysisForm.type === 'shortestPath') {
+                            this.analysisResponse = {
+                                type: "FeatureCollection",
+                                features: [
+                                    {
+                                        type: "Feature",
+                                        geometry: {
+                                            type: "LineString",
+                                            coordinates: [
+                                                [parseFloat(this.analysisForm.shortestPath.startX), parseFloat(this.analysisForm.shortestPath.startY)],
+                                                [116.39, 39.89],
+                                                [116.395, 39.9],
+                                                [116.4, 39.905],
+                                                [parseFloat(this.analysisForm.shortestPath.endX), parseFloat(this.analysisForm.shortestPath.endY)]
+                                            ]
+                                        },
+                                        properties: {
+                                            analysisType: "shortestPath",
+                                            pathType: this.analysisForm.shortestPath.type,
+                                            distance: 1250,
+                                            duration: 15,
+                                            timestamp: new Date().toISOString()
+                                        }
+                                    }
+                                ]
+                            };
+                        } else if (this.analysisForm.type === 'flood') {
+                            this.analysisResponse = {
+                                type: "FeatureCollection",
+                                features: [
+                                    {
+                                        type: "Feature",
+                                        geometry: {
+                                            type: "Polygon",
+                                            coordinates: [
+                                                [
+                                                    [116.395, 39.895],
+                                                    [116.405, 39.895],
+                                                    [116.405, 39.905],
+                                                    [116.395, 39.905],
+                                                    [116.395, 39.895]
+                                                ]
+                                            ]
+                                        },
+                                        properties: {
+                                            analysisType: "flood",
+                                            center: [
+                                                parseFloat(this.analysisForm.flood.centerX),
+                                                parseFloat(this.analysisForm.flood.centerY)
+                                            ],
+                                            radius: this.analysisForm.flood.radius,
+                                            height: this.analysisForm.flood.height,
+                                            color: this.analysisForm.flood.color,
+                                            timestamp: new Date().toISOString()
+                                        }
+                                    }
+                                ]
+                            };
+                        }
+                    }, 1000);
+                },
+                resetAnalysisForm() {
+                    this.analysisForm = {
+                        type: 'buffer',
+                        buffer: {
+                            geometryType: 'point',
+                            geometry: '{"type":"Point","coordinates":[116.4,39.9]}',
+                            distance: 100
+                        },
+                        viewshed: {
+                            x: '116.4',
+                            y: '39.9',
+                            z: '50',
+                            radius: 1000,
+                            horizontalAngle: 120,
+                            verticalAngle: 60
+                        },
+                        shortestPath: {
+                            startX: '116.38',
+                            startY: '39.88',
+                            endX: '116.42',
+                            endY: '39.92',
+                            type: 'distance'
+                        },
+                        flood: {
+                            centerX: '116.4',
+                            centerY: '39.9',
+                            radius: 500,
+                            height: 10,
+                            color: '#1E90FF'
+                        }
+                    };
+                    this.analysisResponse = null;
+                },
+                handleFileChange(file) {
+                    this.selectedFile = file.raw;
+                },
+                processBatchData() {
+                    // 模拟批量数据处理
+                    setTimeout(() => {
+                        if (this.batchForm.type === 'import') {
+                            this.batchResponse = {
+                                status: "success",
+                                operation: "import",
+                                sourceType: this.batchForm.import.sourceType,
+                                targetSceneId: this.batchForm.import.targetSceneId,
+                                featuresImported: 156,
+                                timestamp: new Date().toISOString(),
+                                jobId: "import_" + Math.floor(Math.random() * 1000000)
+                            };
+                        } else if (this.batchForm.type === 'export') {
+                            this.batchResponse = {
+                                status: "success",
+                                operation: "export",
+                                sceneId: this.batchForm.export.sceneId,
+                                format: this.batchForm.export.format,
+                                featuresExported: 156,
+                                downloadUrl: "https://api.taiji.geonexus.com/v1/downloads/export_" + Math.floor(Math.random() * 1000000) + "." + this.batchForm.export.format,
+                                timestamp: new Date().toISOString(),
+                                jobId: "export_" + Math.floor(Math.random() * 1000000)
+                            };
+                        } else if (this.batchForm.type === 'convert') {
+                            this.batchResponse = {
+                                status: "success",
+                                operation: "convert",
+                                sourceType: this.batchForm.convert.sourceType,
+                                targetType: this.batchForm.convert.targetType,
+                                featuresConverted: 156,
+                                downloadUrl: "https://api.taiji.geonexus.com/v1/downloads/convert_" + Math.floor(Math.random() * 1000000) + "." + this.batchForm.convert.targetType,
+                                timestamp: new Date().toISOString(),
+                                jobId: "convert_" + Math.floor(Math.random() * 1000000)
+                            };
+                        } else if (this.batchForm.type === 'clean') {
+                            this.batchResponse = {
+                                status: "success",
+                                operation: "clean",
+                                sceneId: this.batchForm.clean.sceneId,
+                                operations: this.batchForm.clean.operations,
+                                featuresProcessed: 156,
+                                featuresFixed: 23,
+                                timestamp: new Date().toISOString(),
+                                jobId: "clean_" + Math.floor(Math.random() * 1000000)
+                            };
+                        }
+                    }, 1500);
+                },
+                resetBatchForm() {
+                    this.batchForm = {
+                        type: 'import',
+                        import: {
+                            sourceType: 'shapefile',
+                            targetSceneId: 'buildings',
+                            file: null
+                        },
+                        export: {
+                            sceneId: 'buildings',
+                            format: 'geojson',
+                            spatialFilter: false,
+                            minX: '116.3',
+                            minY: '39.8',
+                            maxX: '116.5',
+                            maxY: '40.0'
+                        },
+                        convert: {
+                            sourceType: 'shapefile',
+                            targetType: 'geojson',
+                            file: null
+                        },
+                        clean: {
+                            sceneId: 'buildings',
+                            operations: ['removeInvalid', 'fixSelfIntersections'],
+                            tolerance: 0.1
+                        }
+                    };
+                    this.batchResponse = null;
+                    this.selectedFile = null;
+                }
+            },
+            mounted() {
+                // 尝试从本地存储加载认证配置
+                const savedConfig = localStorage.getItem('taiji_api_config');
+                if (savedConfig) {
+                    try {
+                        this.authForm = JSON.parse(savedConfig);
+                    } catch (e) {
+                        console.error('Failed to parse saved config:', e);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

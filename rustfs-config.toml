@@ -1,0 +1,12 @@
+[server]
+host = "0.0.0.0"
+port = 8000
+
+[s3]
+enabled = true
+access_key = "rustfs"
+secret_key = "rustfs_secret"
+
+[storage]
+root = "/data"
+buckets = ["geonexus-assets"]

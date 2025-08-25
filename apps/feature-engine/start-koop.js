@@ -9,7 +9,7 @@ koop.register(require('@koopjs/output-geoservices'));
 koop.server.get('/', (req, res) => {
   res.status(200).json({
     status: 'success',
-    message: '飞渡数据服务框架已启动',
+    message: 'GeoNexus数据中台已启动',
     timestamp: new Date().toISOString()
   });
 });
@@ -17,5 +17,5 @@ koop.server.get('/', (req, res) => {
 // 启动服务器
 const port = process.env.PORT || 7071;
 koop.server.listen(port, () => {
-  console.log(`飞渡数据服务框架已启动，监听端口: ${port}`);
+  console.log(`GeoNexus数据中台已启动，监听端口: ${port}`);
 });

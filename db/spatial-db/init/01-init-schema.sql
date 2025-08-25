@@ -1,9 +1,11 @@
 -- 确保 PostGIS 扩展已启用
 CREATE EXTENSION IF NOT EXISTS postgis;
+-- 确保 UUID 扩展已启用
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 创建我们的业务要素表
 CREATE TABLE IF NOT EXISTS business_features (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255),
     status VARCHAR(50) DEFAULT 'active',
     asset_ids JSONB DEFAULT '[]',
