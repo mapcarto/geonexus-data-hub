@@ -68,11 +68,7 @@ services:
       - STORAGE_RUSTFS_KEY=${RUSTFS_ACCESS_KEY:-rustfs}
       - STORAGE_RUSTFS_SECRET=${RUSTFS_SECRET_KEY:-rustfs_secret}
       - STORAGE_RUSTFS_REGION=${RUSTFS_REGION:-cn-north-1}
-      - STORAGE_RUSTFS_PORT=9000
-      - STORAGE_RUSTFS_USE_SSL=false
-      - STORAGE_RUSTFS_FORCE_PATH_STYLE=true
-      - AWS_S3_FORCE_PATH_STYLE=true
-      - DEFAULT_LOCALE=zh-CN
+      - STORAGE_RUSTFS_S3_FORCE_PATH_STYLE=true
     networks:
       - geonexus-net
     depends_on:

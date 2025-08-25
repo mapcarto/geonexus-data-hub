@@ -2,7 +2,7 @@
   "version": "1",
   "npmClient": "npm",
   "type": "provider",
-  "name": "feidu-dts-provider",
+  "name": "geonexus-dts-provider",
   "allowedParams": {
     "host": false,
     "id": true
